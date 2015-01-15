@@ -17,6 +17,7 @@ public class AdriftMain extends ApplicationAdapter {
 	private Renderable renderable;
 	private ModelBatch modelBatch;
 	private PerspectiveCamera cam;
+	private float time = 0;
 
 	@Override
 	public void create() {
@@ -31,7 +32,7 @@ public class AdriftMain extends ApplicationAdapter {
 		renderable.environment = new Environment().add(light);
 		modelBatch = new ModelBatch();
 		cam = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 2, -3);
+		cam.position.set(0, 5, -8);
 		cam.lookAt(0, 0, 0);
 		cam.update();
 	}
@@ -41,6 +42,9 @@ public class AdriftMain extends ApplicationAdapter {
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClearColor(.3f, .6f, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+
+		time += Gdx.graphics.getDeltaTime();
+		renderable.worldTransform.setToRotation(0, 1, 0, time * 30);
 
 		modelBatch.begin(cam);
 		modelBatch.render(renderable);
