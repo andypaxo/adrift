@@ -12,7 +12,7 @@ public class Terrain {
 	private ArrayList<Short> indices;
 	private int vertexLength;
 
-	public int width = 50, depth = 50, height = 5;
+	public int width = 90, depth = 90, height = 25;
 
 	private int[] voxelData = new int[width * depth * height];
 
@@ -31,6 +31,14 @@ public class Terrain {
 				for (int y = 0; y < height; y++) {
 					if (get(x, y, z) > 0 && get(x, y + 1, z) == 0)
 						addYQuad(x, y, z);
+					if (get(x, y, z) > 0 && get(x + 1, y, z) == 0)
+						addXQuad(x, y, z, 1);
+					if (get(x, y, z) > 0 && get(x - 1, y, z) == 0)
+						addXQuad(x, y, z, -1);
+					if (get(x, y, z) > 0 && get(x, y, z + 1) == 0)
+						addZQuad(x, y, z, 1);
+					if (get(x, y, z) > 0 && get(x, y, z - 1) == 0)
+						addZQuad(x, y, z, -1);
 				}
 			}
 		}
@@ -48,18 +56,18 @@ public class Terrain {
 		for (int x = 0; x < width; x++) {
 			for (int z = 0; z < depth; z++) {
 				for (int y = 0; y < height; y++) {
-					heightAtPoint = Math
-							.cos(((x - width * .5) * (x - width * .5) + (z - depth * .5)
-									* (z - depth * .5))
-									/ (width + depth));
-					set(x, y, z, (y / (double) height) < heightAtPoint ? 1 : 0);
+					heightAtPoint = Math.cos(Math
+							.sqrt(((x - width * .5) * (x - width * .5) + (z - depth * .5)
+									* (z - depth * .5)))
+							/ width * Math.PI);
+					set(x, y, z, (y / (double) height) < heightAtPoint || y == 0 ? 1 : 0);
 				}
 			}
 		}
 	}
 
 	private int get(int x, int y, int z) {
-		if (y >= height)
+		if (y >= height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
 			return 0;
 
 		return voxelData[y * width * depth + z * width + x];
@@ -107,6 +115,104 @@ public class Terrain {
 		indices.add(indexBase);
 		indices.add(new Short((short) (indexBase + 2)));
 		indices.add(new Short((short) (indexBase + 3)));
+	}
+
+	private void addXQuad(float x, float y, float z, float direction) {
+		// Only adds vertical quads for now
+		short indexBase = (short) (vertices.size() / vertexLength);
+
+		vertices.add(x + .5f * direction);
+		vertices.add(y - .5f);
+		vertices.add(z + .5f);
+		vertices.add(direction);
+		vertices.add(0f);
+		vertices.add(0f);
+
+		vertices.add(x + .5f * direction);
+		vertices.add(y + .5f);
+		vertices.add(z + .5f);
+		vertices.add(direction);
+		vertices.add(0f);
+		vertices.add(0f);
+
+		vertices.add(x + .5f * direction);
+		vertices.add(y + .5f);
+		vertices.add(z - .5f);
+		vertices.add(direction);
+		vertices.add(0f);
+		vertices.add(0f);
+
+		vertices.add(x + .5f * direction);
+		vertices.add(y - .5f);
+		vertices.add(z - .5f);
+		vertices.add(direction);
+		vertices.add(0f);
+		vertices.add(0f);
+
+		if (direction > 0) {
+			indices.add(indexBase);
+			indices.add(new Short((short) (indexBase + 2)));
+			indices.add(new Short((short) (indexBase + 1)));
+			indices.add(indexBase);
+			indices.add(new Short((short) (indexBase + 3)));
+			indices.add(new Short((short) (indexBase + 2)));
+		} else {
+			indices.add(indexBase);
+			indices.add(new Short((short) (indexBase + 1)));
+			indices.add(new Short((short) (indexBase + 2)));
+			indices.add(indexBase);
+			indices.add(new Short((short) (indexBase + 2)));
+			indices.add(new Short((short) (indexBase + 3)));
+		}
+	}
+
+	private void addZQuad(float x, float y, float z, float direction) {
+		// Only adds vertical quads for now
+		short indexBase = (short) (vertices.size() / vertexLength);
+
+		vertices.add(x + .5f);
+		vertices.add(y - .5f);
+		vertices.add(z + .5f * direction);
+		vertices.add(0f);
+		vertices.add(0f);
+		vertices.add(direction);
+
+		vertices.add(x + .5f);
+		vertices.add(y + .5f);
+		vertices.add(z + .5f * direction);
+		vertices.add(0f);
+		vertices.add(0f);
+		vertices.add(direction);
+
+		vertices.add(x - .5f);
+		vertices.add(y + .5f);
+		vertices.add(z + .5f * direction);
+		vertices.add(0f);
+		vertices.add(0f);
+		vertices.add(direction);
+
+		vertices.add(x - .5f);
+		vertices.add(y - .5f);
+		vertices.add(z + .5f * direction);
+		vertices.add(0f);
+		vertices.add(0f);
+		vertices.add(direction);
+
+		if (direction < 0) {
+			indices.add(indexBase);
+			indices.add(new Short((short) (indexBase + 2)));
+			indices.add(new Short((short) (indexBase + 1)));
+			indices.add(indexBase);
+			indices.add(new Short((short) (indexBase + 3)));
+			indices.add(new Short((short) (indexBase + 2)));
+		} else {
+			indices.add(indexBase);
+			indices.add(new Short((short) (indexBase + 1)));
+			indices.add(new Short((short) (indexBase + 2)));
+			indices.add(indexBase);
+			indices.add(new Short((short) (indexBase + 2)));
+			indices.add(new Short((short) (indexBase + 3)));
+		}
 	}
 
 	private static float[] convertFloats(List<Float> floats) {

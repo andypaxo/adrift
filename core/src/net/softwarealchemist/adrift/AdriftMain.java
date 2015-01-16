@@ -48,7 +48,7 @@ public class AdriftMain extends ApplicationAdapter {
 		time += Gdx.graphics.getDeltaTime();
 		// renderable.worldTransform.rotate(0, 1, 0, time * 10);
 
-		final float rotation = time * .3f;
+		final float rotation = time * .5f;
 		cam.position.set(//
 				//
 				(float) (terrain.depth * .5f + Math.sin(rotation) * terrain.width), //
