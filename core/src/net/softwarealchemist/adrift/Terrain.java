@@ -7,31 +7,69 @@ import java.util.List;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 
-public class TerrainMaker {
+public class Terrain {
 	private ArrayList<Float> vertices;
 	private ArrayList<Short> indices;
 	private int vertexLength;
 
-	public Mesh generate() {
+	public int width = 50, depth = 50, height = 5;
+
+	private int[] voxelData = new int[width * depth * height];
+
+	public Mesh generateMesh() {
+		System.out.println("Generating...");
+		generateVoxelData();
+
 		vertices = new ArrayList<Float>();
 		indices = new ArrayList<Short>();
 
 		vertexLength = VertexAttribute.Position().numComponents
 				+ VertexAttribute.Normal().numComponents;
 
-		for (int x = -10; x < 10; x++)
-			for (int z = -10; z < 10; z++)
-				addQuad(x, (float) Math.random(), z);
+		for (int x = 0; x < width; x++) {
+			for (int z = 0; z < depth; z++) {
+				for (int y = 0; y < height; y++) {
+					if (get(x, y, z) > 0 && get(x, y + 1, z) == 0)
+						addYQuad(x, y, z);
+				}
+			}
+		}
 
 		final Mesh result = new Mesh(true, vertices.size(), indices.size(),
 				VertexAttribute.Position(), VertexAttribute.Normal());
 		result.setVertices(convertFloats(vertices));
 		result.setIndices(convertShorts(indices));
-
+		System.out.println("Generation complete");
 		return result;
 	}
 
-	private void addQuad(float x, float y, float z) {
+	private void generateVoxelData() {
+		double heightAtPoint;
+		for (int x = 0; x < width; x++) {
+			for (int z = 0; z < depth; z++) {
+				for (int y = 0; y < height; y++) {
+					heightAtPoint = Math
+							.cos(((x - width * .5) * (x - width * .5) + (z - depth * .5)
+									* (z - depth * .5))
+									/ (width + depth));
+					set(x, y, z, (y / (double) height) < heightAtPoint ? 1 : 0);
+				}
+			}
+		}
+	}
+
+	private int get(int x, int y, int z) {
+		if (y >= height)
+			return 0;
+
+		return voxelData[y * width * depth + z * width + x];
+	}
+
+	private void set(int x, int y, int z, int val) {
+		voxelData[y * width * depth + z * width + x] = val;
+	}
+
+	private void addYQuad(float x, float y, float z) {
 		// Only adds vertical quads for now
 		short indexBase = (short) (vertices.size() / vertexLength);
 
