@@ -11,12 +11,15 @@ public class Terrain {
 	private ShortBuffer indices;
 	private int vertexLength;
 
-	public int width = 256, depth = 256, height = 32;
+	public int width = 320, depth = 320, height = 64;
+	public double seed;
 
 	private int[] voxelData = new int[width * depth * height];
+	private double noiseScale = 4;
 
 	public List<Mesh> generateMeshes() {
 		System.out.println("Generating...");
+		seed = Math.random() * 1000000.0;
 		generateVoxelData();
 
 		vertexLength = VertexAttribute.Position().numComponents
@@ -24,7 +27,7 @@ public class Terrain {
 
 		final ArrayList<Mesh> result = new ArrayList<Mesh>();
 		final int chunkSize = 32;
-		vertices = new FloatBuffer(chunkSize * chunkSize * 64);
+		vertices = new FloatBuffer(chunkSize * chunkSize * 128);
 		indices = new ShortBuffer(chunkSize * chunkSize * 48);
 
 		for (int x = 0; x < width; x += chunkSize)
@@ -53,7 +56,7 @@ public class Terrain {
 			}
 		}
 
-		System.out.println(String.format("Generated %d vertices and %d indices", vertices.length, indices.length));
+		System.out.println(String.format("Generated %d triangles", indices.length / 3));
 		final Mesh mesh = new Mesh(true, vertices.length, indices.length,
 				VertexAttribute.Position(), VertexAttribute.Normal());
 		mesh.setVertices(vertices.buffer, 0, vertices.length);
@@ -65,18 +68,23 @@ public class Terrain {
 
 	private void generateVoxelData() {
 		double heightAtPoint, distFromCentre;
-		final double noiseScale = 3;
+		double caveValue, caveThreshold = .8f;
 		for (int x = 0; x < width; x++) {
 			for (int z = 0; z < depth; z++) {
 				for (int y = 0; y < height; y++) {
 					distFromCentre = Math
 							.sqrt(((x - width * .5) * (x - width * .5) + (z - depth * .5)
 									* (z - depth * .5)))
-							/ width;
+							* 2.0 / width;
 
-					heightAtPoint = (SimplexNoise.noise(x * noiseScale / width, z * noiseScale / depth) * .5 + .5)
-							* (1 - distFromCentre);
-					set(x, y, z, (y / (double) height) < heightAtPoint || y == 0 ? 1 : 0);
+					heightAtPoint =
+						((SimplexNoise.noise((x * noiseScale / width) + seed, z * noiseScale / depth) * .5 + .5) +
+						(SimplexNoise.noise((x * noiseScale * 2 / width) + seed + 10000, z * noiseScale * 2 / depth) * .2))
+							* (1 - distFromCentre) - (1.0 / height);
+//					caveValue = (SimplexNoise.noise((x * noiseScale / width) + seed + 30000, z * noiseScale / depth, y * noiseScale / height) * .5 + .5)
+//							* (1 - ((double) y / height));
+					caveValue = SimplexNoise.noise((x * noiseScale / width) + seed + 30000, z * noiseScale / depth, y * noiseScale / height) * .5 + .5;
+					set(x, y, z, (y / (double) height) < heightAtPoint && caveValue < caveThreshold ? 1 : 0);
 				}
 			}
 		}
@@ -96,135 +104,67 @@ public class Terrain {
 	private void addYQuad(float x, float y, float z) {
 		short indexBase = (short) (vertices.length / vertexLength);
 
-		vertices.add(x - .5f);
-		vertices.add(y + .5f);
-		vertices.add(z + .5f);
-		vertices.add(0f);
-		vertices.add(1f);
-		vertices.add(0f);
+		vertices.add(x - .5f, y + .5f, z + .5f);
+		vertices.add(0f, 1f, 0f);
 
-		vertices.add(x + .5f);
-		vertices.add(y + .5f);
-		vertices.add(z + .5f);
-		vertices.add(0f);
-		vertices.add(1f);
-		vertices.add(0f);
+		vertices.add(x + .5f, y + .5f, z + .5f);
+		vertices.add(0f, 1f, 0f);
 
-		vertices.add(x + .5f);
-		vertices.add(y + .5f);
-		vertices.add(z - .5f);
-		vertices.add(0f);
-		vertices.add(1f);
-		vertices.add(0f);
+		vertices.add(x + .5f, y + .5f, z - .5f);
+		vertices.add(0f, 1f, 0f);
 
-		vertices.add(x - .5f);
-		vertices.add(y + .5f);
-		vertices.add(z - .5f);
-		vertices.add(0f);
-		vertices.add(1f);
-		vertices.add(0f);
+		vertices.add(x - .5f, y + .5f, z - .5f);
+		vertices.add(0f, 1f, 0f);
 
-		indices.add(indexBase);
-		indices.add(new Short((short) (indexBase + 1)));
-		indices.add(new Short((short) (indexBase + 2)));
-		indices.add(indexBase);
-		indices.add(new Short((short) (indexBase + 2)));
-		indices.add(new Short((short) (indexBase + 3)));
+		indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
+		indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 3));
 	}
 
 	private void addXQuad(float x, float y, float z, float direction) {
 		short indexBase = (short) (vertices.length / vertexLength);
 
-		vertices.add(x + .5f * direction);
-		vertices.add(y - .5f);
-		vertices.add(z + .5f);
-		vertices.add(direction);
-		vertices.add(0f);
-		vertices.add(0f);
+		vertices.add(x + .5f * direction, y - .5f, z + .5f);
+		vertices.add(direction, 0f, 0f);
 
-		vertices.add(x + .5f * direction);
-		vertices.add(y + .5f);
-		vertices.add(z + .5f);
-		vertices.add(direction);
-		vertices.add(0f);
-		vertices.add(0f);
+		vertices.add(x + .5f * direction, y + .5f, z + .5f);
+		vertices.add(direction, 0f, 0f);
 
-		vertices.add(x + .5f * direction);
-		vertices.add(y + .5f);
-		vertices.add(z - .5f);
-		vertices.add(direction);
-		vertices.add(0f);
-		vertices.add(0f);
+		vertices.add(x + .5f * direction, y + .5f, z - .5f);
+		vertices.add(direction, 0f, 0f);
 
-		vertices.add(x + .5f * direction);
-		vertices.add(y - .5f);
-		vertices.add(z - .5f);
-		vertices.add(direction);
-		vertices.add(0f);
-		vertices.add(0f);
+		vertices.add(x + .5f * direction, y - .5f, z - .5f);
+		vertices.add(direction, 0f, 0f);
 
 		if (direction > 0) {
-			indices.add(indexBase);
-			indices.add(new Short((short) (indexBase + 2)));
-			indices.add(new Short((short) (indexBase + 1)));
-			indices.add(indexBase);
-			indices.add(new Short((short) (indexBase + 3)));
-			indices.add(new Short((short) (indexBase + 2)));
+			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 1));
+			indices.add(indexBase, (short) (indexBase + 3), (short) (indexBase + 2));
 		} else {
-			indices.add(indexBase);
-			indices.add(new Short((short) (indexBase + 1)));
-			indices.add(new Short((short) (indexBase + 2)));
-			indices.add(indexBase);
-			indices.add(new Short((short) (indexBase + 2)));
-			indices.add(new Short((short) (indexBase + 3)));
+			indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
+			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 3));
 		}
 	}
 
 	private void addZQuad(float x, float y, float z, float direction) {
 		short indexBase = (short) (vertices.length / vertexLength);
 
-		vertices.add(x + .5f);
-		vertices.add(y - .5f);
-		vertices.add(z + .5f * direction);
-		vertices.add(0f);
-		vertices.add(0f);
-		vertices.add(direction);
+		vertices.add(x + .5f, y - .5f, z + .5f * direction);
+		vertices.add(0f, 0f, direction);
 
-		vertices.add(x + .5f);
-		vertices.add(y + .5f);
-		vertices.add(z + .5f * direction);
-		vertices.add(0f);
-		vertices.add(0f);
-		vertices.add(direction);
+		vertices.add(x + .5f, y + .5f, z + .5f * direction);
+		vertices.add(0f, 0f, direction);
 
-		vertices.add(x - .5f);
-		vertices.add(y + .5f);
-		vertices.add(z + .5f * direction);
-		vertices.add(0f);
-		vertices.add(0f);
-		vertices.add(direction);
+		vertices.add(x - .5f, y + .5f, z + .5f * direction);
+		vertices.add(0f, 0f, direction);
 
-		vertices.add(x - .5f);
-		vertices.add(y - .5f);
-		vertices.add(z + .5f * direction);
-		vertices.add(0f);
-		vertices.add(0f);
-		vertices.add(direction);
+		vertices.add(x - .5f, y - .5f, z + .5f * direction);
+		vertices.add(0f, 0f, direction);
 
 		if (direction < 0) {
-			indices.add(indexBase);
-			indices.add(new Short((short) (indexBase + 2)));
-			indices.add(new Short((short) (indexBase + 1)));
-			indices.add(indexBase);
-			indices.add(new Short((short) (indexBase + 3)));
-			indices.add(new Short((short) (indexBase + 2)));
+			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 1));
+			indices.add(indexBase, (short) (indexBase + 3), (short) (indexBase + 2));
 		} else {
-			indices.add(indexBase);
-			indices.add(new Short((short) (indexBase + 1)));
-			indices.add(new Short((short) (indexBase + 2)));
-			indices.add(indexBase);
-			indices.add(new Short((short) (indexBase + 2)));
-			indices.add(new Short((short) (indexBase + 3)));
+			indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
+			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 3));
 		}
 	}
 }

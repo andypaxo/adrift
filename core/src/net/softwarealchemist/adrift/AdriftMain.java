@@ -28,6 +28,22 @@ public class AdriftMain extends ApplicationAdapter {
 
 	@Override
 	public void create() {
+		createTerrain();
+		createEnvironment();
+		
+		modelBatch = new ModelBatch();
+		cam = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		cam.far = terrain.depth * 2;
+		cam.update();
+	}
+
+	private void createEnvironment() {
+		final PointLight light = new PointLight().set(1, 1, 1, terrain.width * .5f,
+				terrain.height * 3, terrain.depth * .3f, terrain.width * terrain.depth);
+		environment = new Environment().add(light);
+	}
+
+	private void createTerrain() {
 		terrain = new Terrain();
 		final Material groundMaterial = new Material(ColorAttribute.createDiffuse(.4f, 1, .2f, 1));
 		final List<Mesh> meshes = terrain.generateMeshes();
@@ -40,15 +56,6 @@ public class AdriftMain extends ApplicationAdapter {
 		}
 		model = modelBuilder.end();
 		modelInstance = new ModelInstance(model);
-
-		final PointLight light = new PointLight().set(1, 1, 1, terrain.width * .5f,
-				terrain.height * 3, terrain.depth * .3f, terrain.width * terrain.depth);
-		environment = new Environment().add(light);
-		
-		modelBatch = new ModelBatch();
-		cam = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.far = terrain.depth * 2;
-		cam.update();
 	}
 
 	@Override
@@ -63,9 +70,9 @@ public class AdriftMain extends ApplicationAdapter {
 		final float rotation = time * .5f;
 		cam.position.set(//
 				//
-				(float) (terrain.depth * .5f + Math.sin(rotation) * terrain.width), //
-				terrain.height + terrain.depth / 2, //
-				(float) (terrain.depth * .5f + Math.cos(rotation) * terrain.depth));
+				(float) (terrain.depth * .5f + (Math.sin(rotation) * terrain.width) * .8f), //
+				(terrain.height + terrain.depth) * .5f, //
+				(float) (terrain.depth * .5f + (Math.cos(rotation) * terrain.depth) * .8f));
 		cam.lookAt(terrain.width * .5f, 0, terrain.depth * .5f);
 		cam.up.set(0, 1, 0);
 		cam.update();
