@@ -1,5 +1,7 @@
 package net.softwarealchemist.adrift;
 
+import java.util.List;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -7,32 +9,42 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 
 public class AdriftMain extends ApplicationAdapter {
 
-	private Renderable renderable;
+	private Model model;
+	private ModelInstance modelInstance;
 	private ModelBatch modelBatch;
 	private PerspectiveCamera cam;
 	private float time = 0;
 	private Terrain terrain;
+	private Environment environment;
 
 	@Override
 	public void create() {
 		terrain = new Terrain();
-		final Mesh mesh = terrain.generateMesh();
-		renderable = new Renderable();
-		renderable.mesh = mesh;
-		renderable.meshPartOffset = 0;
-		renderable.meshPartSize = mesh.getNumIndices();
-		renderable.primitiveType = GL20.GL_TRIANGLES;
-		renderable.material = new Material(ColorAttribute.createDiffuse(.4f, 1, .2f, 1));
+		final Material groundMaterial = new Material(ColorAttribute.createDiffuse(.4f, 1, .2f, 1));
+		final List<Mesh> meshes = terrain.generateMeshes();
+
+		final ModelBuilder modelBuilder = new ModelBuilder();
+		int i = 0;
+		modelBuilder.begin();
+		for (Mesh mesh : meshes) {
+			modelBuilder.part(Integer.toString(i++), mesh, GL20.GL_TRIANGLES, groundMaterial);
+		}
+		model = modelBuilder.end();
+		modelInstance = new ModelInstance(model);
+
 		final PointLight light = new PointLight().set(1, 1, 1, terrain.width * .5f,
 				terrain.height * 3, terrain.depth * .3f, terrain.width * terrain.depth);
-		renderable.environment = new Environment().add(light);
+		environment = new Environment().add(light);
+		
 		modelBatch = new ModelBatch();
 		cam = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.far = terrain.depth * 2;
@@ -59,14 +71,14 @@ public class AdriftMain extends ApplicationAdapter {
 		cam.update();
 
 		modelBatch.begin(cam);
-		modelBatch.render(renderable);
+		modelBatch.render(modelInstance, environment);
 		modelBatch.end();
 	}
 
 	@Override
 	public void dispose() {
 		modelBatch.dispose();
-		renderable.mesh.dispose();
+		model.dispose();
 	}
 
 }

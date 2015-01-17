@@ -1,33 +1,43 @@
 package net.softwarealchemist.adrift;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 
 public class Terrain {
-	private ArrayList<Float> vertices;
-	private ArrayList<Short> indices;
+	private FloatBuffer vertices;
+	private ShortBuffer indices;
 	private int vertexLength;
 
-	public int width = 90, depth = 90, height = 25;
+	public int width = 256, depth = 256, height = 32;
 
 	private int[] voxelData = new int[width * depth * height];
 
-	public Mesh generateMesh() {
+	public List<Mesh> generateMeshes() {
 		System.out.println("Generating...");
 		generateVoxelData();
-
-		vertices = new ArrayList<Float>();
-		indices = new ArrayList<Short>();
 
 		vertexLength = VertexAttribute.Position().numComponents
 				+ VertexAttribute.Normal().numComponents;
 
-		for (int x = 0; x < width; x++) {
-			for (int z = 0; z < depth; z++) {
+		final ArrayList<Mesh> result = new ArrayList<Mesh>();
+		final int chunkSize = 32;
+		vertices = new FloatBuffer(chunkSize * chunkSize * 64);
+		indices = new ShortBuffer(chunkSize * chunkSize * 48);
+
+		for (int x = 0; x < width; x += chunkSize)
+			for (int z = 0; z < depth; z += chunkSize)
+				result.add(generateMeshForChunk(chunkSize, x, z));
+		
+		System.out.println("Generation complete");
+		return result;
+	}
+
+	private Mesh generateMeshForChunk(final int chunkSize, final int startX, final int startZ) {
+		for (int x = startX; x < startX + chunkSize; x++) {
+			for (int z = startZ; z < startZ + chunkSize; z++) {
 				for (int y = 0; y < height; y++) {
 					if (get(x, y, z) > 0 && get(x, y + 1, z) == 0)
 						addYQuad(x, y, z);
@@ -43,23 +53,29 @@ public class Terrain {
 			}
 		}
 
-		final Mesh result = new Mesh(true, vertices.size(), indices.size(),
+		System.out.println(String.format("Generated %d vertices and %d indices", vertices.length, indices.length));
+		final Mesh mesh = new Mesh(true, vertices.length, indices.length,
 				VertexAttribute.Position(), VertexAttribute.Normal());
-		result.setVertices(convertFloats(vertices));
-		result.setIndices(convertShorts(indices));
-		System.out.println("Generation complete");
-		return result;
+		mesh.setVertices(vertices.buffer, 0, vertices.length);
+		mesh.setIndices(indices.buffer, 0, indices.length);
+		vertices.reset();
+		indices.reset();
+		return mesh;
 	}
 
 	private void generateVoxelData() {
-		double heightAtPoint;
+		double heightAtPoint, distFromCentre;
+		final double noiseScale = 3;
 		for (int x = 0; x < width; x++) {
 			for (int z = 0; z < depth; z++) {
 				for (int y = 0; y < height; y++) {
-					heightAtPoint = Math.cos(Math
+					distFromCentre = Math
 							.sqrt(((x - width * .5) * (x - width * .5) + (z - depth * .5)
 									* (z - depth * .5)))
-							/ width * Math.PI);
+							/ width;
+
+					heightAtPoint = (SimplexNoise.noise(x * noiseScale / width, z * noiseScale / depth) * .5 + .5)
+							* (1 - distFromCentre);
 					set(x, y, z, (y / (double) height) < heightAtPoint || y == 0 ? 1 : 0);
 				}
 			}
@@ -78,8 +94,7 @@ public class Terrain {
 	}
 
 	private void addYQuad(float x, float y, float z) {
-		// Only adds vertical quads for now
-		short indexBase = (short) (vertices.size() / vertexLength);
+		short indexBase = (short) (vertices.length / vertexLength);
 
 		vertices.add(x - .5f);
 		vertices.add(y + .5f);
@@ -118,8 +133,7 @@ public class Terrain {
 	}
 
 	private void addXQuad(float x, float y, float z, float direction) {
-		// Only adds vertical quads for now
-		short indexBase = (short) (vertices.size() / vertexLength);
+		short indexBase = (short) (vertices.length / vertexLength);
 
 		vertices.add(x + .5f * direction);
 		vertices.add(y - .5f);
@@ -167,8 +181,7 @@ public class Terrain {
 	}
 
 	private void addZQuad(float x, float y, float z, float direction) {
-		// Only adds vertical quads for now
-		short indexBase = (short) (vertices.size() / vertexLength);
+		short indexBase = (short) (vertices.length / vertexLength);
 
 		vertices.add(x + .5f);
 		vertices.add(y - .5f);
@@ -213,23 +226,5 @@ public class Terrain {
 			indices.add(new Short((short) (indexBase + 2)));
 			indices.add(new Short((short) (indexBase + 3)));
 		}
-	}
-
-	private static float[] convertFloats(List<Float> floats) {
-		float[] ret = new float[floats.size()];
-		Iterator<Float> iterator = floats.iterator();
-		for (int i = 0; i < ret.length; i++) {
-			ret[i] = iterator.next().floatValue();
-		}
-		return ret;
-	}
-
-	private static short[] convertShorts(List<Short> shorts) {
-		short[] ret = new short[shorts.size()];
-		Iterator<Short> iterator = shorts.iterator();
-		for (int i = 0; i < ret.length; i++) {
-			ret[i] = iterator.next().shortValue();
-		}
-		return ret;
 	}
 }
