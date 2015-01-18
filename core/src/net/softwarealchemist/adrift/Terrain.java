@@ -16,12 +16,14 @@ public class Terrain {
 	public double seed;
 
 	private int[] voxelData = new int[width * depth * height];
+	private float[] lightData = new float[width * depth * height];
 	private double noiseScale = 4;
 
 	public List<Mesh> generateMeshes() {
 		System.out.println("Generating...");
 		seed = Math.random() * 1000000.0;
 		generateVoxelData();
+		calculateLights();
 
 		vertexLength = VertexAttribute.Position().numComponents
 				+ VertexAttribute.Normal().numComponents
@@ -71,8 +73,8 @@ public class Terrain {
 	private void generateVoxelData() {
 		double heightAtPoint, distFromCentre;
 		double caveValue, caveThreshold = .8f;
-		for (int x = 0; x < width; x++) {
-			for (int z = 0; z < depth; z++) {
+		for (int x = 0; x < width; x++)
+			for (int z = 0; z < depth; z++)
 				for (int y = 0; y < height; y++) {
 					distFromCentre = Math
 							.sqrt(((x - width * .5) * (x - width * .5) + (z - depth * .5)
@@ -91,6 +93,22 @@ public class Terrain {
 							y * noiseScale * 1.5 / height) * .5 + .5;
 					set(x, y, z, (y / (double) height) < heightAtPoint && caveValue < caveThreshold ? 1 : 0);
 				}
+	}
+	
+	private void calculateLights() {
+		for (int y = height - 1; y >= 0; y--) {
+			for (int x = 0; x < width; x++) {
+				for (int z = 0; z < depth; z++) {
+					if (y == height - 1)
+						setLight(x, y, z, 1);
+					else {
+						float lightLevel = 0;
+						for (int dx = -1; dx <= 1; dx++)
+							for (int dz = -1; dz <= 1; dz++)
+								lightLevel += (get(x + dx, y + 1, z + dz) == 0 ? getLight(x, y + 1, z) : 0.1f) / 9f;
+						setLight(x, y, z, lightLevel);
+					}
+				}
 			}
 		}
 	}
@@ -106,24 +124,35 @@ public class Terrain {
 		voxelData[y * width * depth + z * width + x] = val;
 	}
 
+	private float getLight(int x, int y, int z) {
+		if (y >= height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
+			return 0;
+
+		return lightData[y * width * depth + z * width + x];
+	}
+	
+	private void setLight(int x, int y, int z, float val) {
+		lightData[y * width * depth + z * width + x] = val;
+	}
+
 	private void addYQuad(int x, int y, int z) {
 		short indexBase = (short) (vertices.length / vertexLength);
 
 		vertices.add(x - .5f, y + .5f, z + .5f);
 		vertices.add(0f, 1f, 0f);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColor(x, y, z, -1, 1));
 
 		vertices.add(x + .5f, y + .5f, z + .5f);
 		vertices.add(0f, 1f, 0f);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColor(x, y, z, 1, 1));
 
 		vertices.add(x + .5f, y + .5f, z - .5f);
 		vertices.add(0f, 1f, 0f);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColor(x, y, z, 1, -1));
 
 		vertices.add(x - .5f, y + .5f, z - .5f);
 		vertices.add(0f, 1f, 0f);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColor(x, y, z, -1, -1));
 
 		indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
 		indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 3));
@@ -187,9 +216,16 @@ public class Terrain {
 
 	private final Vector3 sand = new Vector3(1f, .8f, 0f);
 	private final Vector3 grass = new Vector3(0f, .8f, .2f);
+	
 	private float[] getColor(int x, int y, int z) {
 		Vector3 color = new Vector3(y < 3 ? sand : grass);
-		color.scl((float) y / height);
+		color.scl(getLight(x, y, z));
+		return new float[] {color.x, color.y, color.z, 1};		
+	}
+	
+	private float[] getColor(int x, int y, int z, int xBias, int zBias) {
+		Vector3 color = new Vector3(y < 3 ? sand : grass);
+		color.scl(getLight(x, y, z) * .6f + getLight(x + xBias, y, z + zBias) * .4f);
 		return new float[] {color.x, color.y, color.z, 1};
 	}
 }
