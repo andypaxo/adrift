@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.math.Vector3;
 
 public class Terrain {
 	private FloatBuffer vertices;
@@ -23,11 +24,12 @@ public class Terrain {
 		generateVoxelData();
 
 		vertexLength = VertexAttribute.Position().numComponents
-				+ VertexAttribute.Normal().numComponents;
+				+ VertexAttribute.Normal().numComponents
+				+ VertexAttribute.ColorUnpacked().numComponents;
 
 		final ArrayList<Mesh> result = new ArrayList<Mesh>();
 		final int chunkSize = 32;
-		vertices = new FloatBuffer(chunkSize * chunkSize * 128);
+		vertices = new FloatBuffer(chunkSize * chunkSize * vertexLength * 64);
 		indices = new ShortBuffer(chunkSize * chunkSize * 48);
 
 		for (int x = 0; x < width; x += chunkSize)
@@ -58,7 +60,7 @@ public class Terrain {
 
 		System.out.println(String.format("Generated %d triangles", indices.length / 3));
 		final Mesh mesh = new Mesh(true, vertices.length, indices.length,
-				VertexAttribute.Position(), VertexAttribute.Normal());
+				VertexAttribute.Position(), VertexAttribute.Normal(), VertexAttribute.ColorUnpacked());
 		mesh.setVertices(vertices.buffer, 0, vertices.length);
 		mesh.setIndices(indices.buffer, 0, indices.length);
 		vertices.reset();
@@ -83,7 +85,10 @@ public class Terrain {
 							* (1 - distFromCentre) - (1.0 / height);
 //					caveValue = (SimplexNoise.noise((x * noiseScale / width) + seed + 30000, z * noiseScale / depth, y * noiseScale / height) * .5 + .5)
 //							* (1 - ((double) y / height));
-					caveValue = SimplexNoise.noise((x * noiseScale / width) + seed + 30000, z * noiseScale / depth, y * noiseScale / height) * .5 + .5;
+					caveValue = SimplexNoise.noise((
+							x * noiseScale * 1.5 / width) + seed + 30000,
+							z * noiseScale * 1.5 / depth,
+							y * noiseScale * 1.5 / height) * .5 + .5;
 					set(x, y, z, (y / (double) height) < heightAtPoint && caveValue < caveThreshold ? 1 : 0);
 				}
 			}
@@ -101,39 +106,47 @@ public class Terrain {
 		voxelData[y * width * depth + z * width + x] = val;
 	}
 
-	private void addYQuad(float x, float y, float z) {
+	private void addYQuad(int x, int y, int z) {
 		short indexBase = (short) (vertices.length / vertexLength);
 
 		vertices.add(x - .5f, y + .5f, z + .5f);
 		vertices.add(0f, 1f, 0f);
+		vertices.add(getColor(x, y, z));
 
 		vertices.add(x + .5f, y + .5f, z + .5f);
 		vertices.add(0f, 1f, 0f);
+		vertices.add(getColor(x, y, z));
 
 		vertices.add(x + .5f, y + .5f, z - .5f);
 		vertices.add(0f, 1f, 0f);
+		vertices.add(getColor(x, y, z));
 
 		vertices.add(x - .5f, y + .5f, z - .5f);
 		vertices.add(0f, 1f, 0f);
+		vertices.add(getColor(x, y, z));
 
 		indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
 		indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 3));
 	}
 
-	private void addXQuad(float x, float y, float z, float direction) {
+	private void addXQuad(int x, int y, int z, float direction) {
 		short indexBase = (short) (vertices.length / vertexLength);
 
 		vertices.add(x + .5f * direction, y - .5f, z + .5f);
 		vertices.add(direction, 0f, 0f);
+		vertices.add(getColor(x, y, z));
 
 		vertices.add(x + .5f * direction, y + .5f, z + .5f);
 		vertices.add(direction, 0f, 0f);
+		vertices.add(getColor(x, y, z));
 
 		vertices.add(x + .5f * direction, y + .5f, z - .5f);
 		vertices.add(direction, 0f, 0f);
+		vertices.add(getColor(x, y, z));
 
 		vertices.add(x + .5f * direction, y - .5f, z - .5f);
 		vertices.add(direction, 0f, 0f);
+		vertices.add(getColor(x, y, z));
 
 		if (direction > 0) {
 			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 1));
@@ -144,20 +157,24 @@ public class Terrain {
 		}
 	}
 
-	private void addZQuad(float x, float y, float z, float direction) {
+	private void addZQuad(int x, int y, int z, float direction) {
 		short indexBase = (short) (vertices.length / vertexLength);
 
 		vertices.add(x + .5f, y - .5f, z + .5f * direction);
 		vertices.add(0f, 0f, direction);
+		vertices.add(getColor(x, y, z));
 
 		vertices.add(x + .5f, y + .5f, z + .5f * direction);
 		vertices.add(0f, 0f, direction);
+		vertices.add(getColor(x, y, z));
 
 		vertices.add(x - .5f, y + .5f, z + .5f * direction);
 		vertices.add(0f, 0f, direction);
+		vertices.add(getColor(x, y, z));
 
 		vertices.add(x - .5f, y - .5f, z + .5f * direction);
 		vertices.add(0f, 0f, direction);
+		vertices.add(getColor(x, y, z));
 
 		if (direction < 0) {
 			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 1));
@@ -166,5 +183,13 @@ public class Terrain {
 			indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
 			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 3));
 		}
+	}
+
+	private final Vector3 sand = new Vector3(1f, .8f, 0f);
+	private final Vector3 grass = new Vector3(0f, .8f, .2f);
+	private float[] getColor(int x, int y, int z) {
+		Vector3 color = new Vector3(y < 3 ? sand : grass);
+		color.scl((float) y / height);
+		return new float[] {color.x, color.y, color.z, 1};
 	}
 }
