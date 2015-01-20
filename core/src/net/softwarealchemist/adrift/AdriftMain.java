@@ -38,12 +38,13 @@ public class AdriftMain extends ApplicationAdapter {
 	}
 
 	private void createEnvironment() {
-//		final PointLight light = new PointLight().set(1, 1, 1, terrain.width * .5f,
-//				terrain.height * 3, terrain.depth * .3f, terrain.width * terrain.depth);
+		//		final PointLight light = new PointLight().set(1, 1, 1, terrain.width * .5f,
+		//				terrain.height * 3, terrain.depth * .3f, terrain.width * terrain.depth);
 		environment = new Environment()
 			.add(new DirectionalLight().set(1f, 1f, 1f, .7f, -1f, .4f))
 			.add(new DirectionalLight().set(.3f, .3f, .3f, -.4f, -1f, -.7f));
-		// environment.set(ColorAttribute.createAmbient(1, 1, 1, 1));
+		environment.set(new ColorAttribute(ColorAttribute.Fog, 0.1f, 0.1f, 9f, 2f));
+		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1.f));
 	}
 
 	private void createTerrain() {
@@ -57,7 +58,7 @@ public class AdriftMain extends ApplicationAdapter {
 		int i = 0;
 		modelBuilder.begin();
 		for (Mesh mesh : meshes) {
-			modelBuilder.part(Integer.toString(i++), mesh, GL20.GL_TRIANGLES, groundMaterial);
+			modelBuilder.part(Integer.toString(i++), mesh, GL20.GL_LINES, groundMaterial);
 		}
 		model = modelBuilder.end();
 		modelInstance = new ModelInstance(model);
@@ -76,7 +77,7 @@ public class AdriftMain extends ApplicationAdapter {
 		cam.position.set(//
 				//
 				(float) (terrain.depth * .5f + (Math.sin(rotation) * terrain.width) * .6f), //
-				terrain.height * 1.2f, //
+				terrain.height * 1.5f, //
 				(float) (terrain.depth * .5f + (Math.cos(rotation) * terrain.depth) * .6f));
 		cam.lookAt(terrain.width * .5f, 0, terrain.depth * .5f);
 		cam.up.set(0, 1, 0);

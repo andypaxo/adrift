@@ -2,6 +2,7 @@ package net.softwarealchemist.adrift;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
@@ -12,17 +13,30 @@ public class Terrain {
 	private ShortBuffer indices;
 	private int vertexLength;
 
-	public int width = 320, depth = 320, height = 64;
+	public int width = 320, depth = 320, height;
 	public double seed;
 
-	private int[] voxelData = new int[width * depth * height];
-	private float[] lightData = new float[width * depth * height];
-	private double noiseScale = 4;
+	private int[] voxelData;
+	private float[] lightData;
+	private double noiseScale;
+	private int numPolys;
 
 	public List<Mesh> generateMeshes() {
 		System.out.println("Generating...");
-		seed = Math.random() * 1000000.0;
+		
+		seed = 100;//Math.random() * 1000000.0;
+		noiseScale = 8;//Math.random() * 5 + 3;
+		height = 96;//(int) (Math.random() * 64.0 + 32);
+
+		voxelData = new int[width * depth * height];
+		lightData = new float[width * depth * height];
+		
+		System.out.println(noiseScale);
+		System.out.println(height);
 		generateVoxelData();
+		long startTime = System.nanoTime();
+		removeUnreachableCaves();
+		System.out.println(String.format("Cave removal took %.1f seconds", (System.nanoTime() - startTime) / 1000000000.0));
 		calculateLights();
 
 		vertexLength = VertexAttribute.Position().numComponents
@@ -32,12 +46,13 @@ public class Terrain {
 		final ArrayList<Mesh> result = new ArrayList<Mesh>();
 		final int chunkSize = 32;
 		vertices = new FloatBuffer(chunkSize * chunkSize * vertexLength * 64);
-		indices = new ShortBuffer(chunkSize * chunkSize * 48);
+		indices = new ShortBuffer(chunkSize * chunkSize * 64);
 
 		for (int x = 0; x < width; x += chunkSize)
 			for (int z = 0; z < depth; z += chunkSize)
 				result.add(generateMeshForChunk(chunkSize, x, z));
 		
+		System.out.println(String.format("Generated %d triangles", numPolys));
 		System.out.println("Generation complete");
 		return result;
 	}
@@ -60,7 +75,7 @@ public class Terrain {
 			}
 		}
 
-		System.out.println(String.format("Generated %d triangles", indices.length / 3));
+		numPolys +=  indices.length / 3;
 		final Mesh mesh = new Mesh(true, vertices.length, indices.length,
 				VertexAttribute.Position(), VertexAttribute.Normal(), VertexAttribute.ColorUnpacked());
 		mesh.setVertices(vertices.buffer, 0, vertices.length);
@@ -93,6 +108,46 @@ public class Terrain {
 							y * noiseScale * 1.5 / height) * .5 + .5;
 					set(x, y, z, (y / (double) height) < heightAtPoint && caveValue < caveThreshold ? 1 : 0);
 				}
+	}
+	
+	private void removeUnreachableCaves() {
+		boolean[] reachableAir = new boolean[voxelData.length];
+		floodfill(reachableAir);
+
+		for (int x = 0; x < width; x++)
+			for (int z = 0; z < depth; z++)
+				for (int y = 0; y < height; y++)
+					if (get(x, y, z) == 0 && !getBoolean(reachableAir, x, y, z))
+						set(x, y, z, 1);
+	}
+	
+	private void floodfill(boolean[] vals)
+	{
+	    Stack<IntVector3> stack = new Stack<IntVector3>();
+	    stack.push(new IntVector3(0, height - 1, 0));
+	    int x, y, z, block;
+	    boolean alreadyFilled;
+	    while (stack.size() > 0)
+	    {
+	    	IntVector3 p = stack.pop();
+	    	x = p.x;
+	    	y = p.y;
+	    	z = p.z;
+	    	if (y < 0 || y > height - 1 || x < 0 || x > width - 1 || z < 0 || z > depth - 1)
+	    		continue;
+	    	block = get(x, y, z);
+	    	alreadyFilled = getBoolean(vals, x, y, z);
+	    	if (block == 0 && !alreadyFilled)
+	    	{
+	    		setBoolean(vals, x, y, z);
+	    		stack.push(new IntVector3(x + 1, y, z));
+	    		stack.push(new IntVector3(x - 1, y, z));
+	    		stack.push(new IntVector3(x, y + 1, z));
+	    		stack.push(new IntVector3(x, y - 1, z));
+	    		stack.push(new IntVector3(x, y, z + 1));
+	    		stack.push(new IntVector3(x, y, z - 1));
+	    	}
+	    }
 	}
 	
 	private void calculateLights() {
@@ -134,7 +189,15 @@ public class Terrain {
 	private void setLight(int x, int y, int z, float val) {
 		lightData[y * width * depth + z * width + x] = val;
 	}
+	
+	private boolean getBoolean(boolean[] vals, int x, int y, int z) {
+		return vals[y * width * depth + z * width + x]; 
+	}
 
+	private void setBoolean(boolean[] vals, int x, int y, int z) {
+		vals[y * width * depth + z * width + x] = true;
+	}
+	
 	private void addYQuad(int x, int y, int z) {
 		short indexBase = (short) (vertices.length / vertexLength);
 
@@ -214,18 +277,25 @@ public class Terrain {
 		}
 	}
 
-	private final Vector3 sand = new Vector3(1f, .8f, 0f);
-	private final Vector3 grass = new Vector3(0f, .8f, .2f);
+	private final Vector3 sand = new Vector3(1f, .8f, .6f);
+	private final Vector3 grass = new Vector3(.5f, .6f, .2f);
+	private final Vector3 snow = new Vector3(.9f, .9f, 1f);
 	
 	private float[] getColor(int x, int y, int z) {
-		Vector3 color = new Vector3(y < 3 ? sand : grass);
-		color.scl(getLight(x, y, z));
-		return new float[] {color.x, color.y, color.z, 1};		
+		colorScratchVector.set(y < 3 ? sand : (y < height - 20 ? grass : snow));
+		colorScratchVector.scl(getLight(x, y, z));
+		colorScratchArray.reset();
+		colorScratchArray.add(colorScratchVector.x, colorScratchVector.y, colorScratchVector.z, 1);
+		return colorScratchArray.buffer;	
 	}
 	
+	private Vector3 colorScratchVector = new Vector3();
+	private FloatBuffer colorScratchArray = new FloatBuffer(4);
 	private float[] getColor(int x, int y, int z, int xBias, int zBias) {
-		Vector3 color = new Vector3(y < 3 ? sand : grass);
-		color.scl(getLight(x, y, z) * .6f + getLight(x + xBias, y, z + zBias) * .4f);
-		return new float[] {color.x, color.y, color.z, 1};
+		colorScratchVector.set(y < 3 ? sand : (y < height - 26 ? grass : (SimplexNoise.noise(x * noiseScale / width, z * noiseScale / depth + seed) > 0 ? grass : snow)));
+		colorScratchVector.scl(getLight(x, y, z) * .6f + getLight(x + xBias, y, z + zBias) * .4f);
+		colorScratchArray.reset();
+		colorScratchArray.add(colorScratchVector.x, colorScratchVector.y, colorScratchVector.z, 1);
+		return colorScratchArray.buffer;
 	}
 }
