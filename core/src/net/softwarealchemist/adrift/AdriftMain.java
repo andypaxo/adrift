@@ -58,7 +58,7 @@ public class AdriftMain extends ApplicationAdapter {
 		int i = 0;
 		modelBuilder.begin();
 		for (Mesh mesh : meshes) {
-			modelBuilder.part(Integer.toString(i++), mesh, GL20.GL_LINES, groundMaterial);
+			modelBuilder.part(Integer.toString(i++), mesh, GL20.GL_TRIANGLES, groundMaterial);
 		}
 		model = modelBuilder.end();
 		modelInstance = new ModelInstance(model);

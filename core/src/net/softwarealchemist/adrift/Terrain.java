@@ -89,27 +89,24 @@ public class Terrain {
 	private void generateVoxelData() {
 		double heightAtPoint, distFromCentre;
 		double caveValue, caveThreshold = .8f;
+		
 		for (int x = 0; x < width; x++)
-			for (int z = 0; z < depth; z++)
-				for (int y = 0; y < height; y++) {
-					distFromCentre = Math
-							.sqrt(((x - width * .5) * (x - width * .5) + (z - depth * .5)
-									* (z - depth * .5)))
-							* 2.0 / width;
-
-					// TODO : Should store this in a height map rather than regenerating for every voxel
-					heightAtPoint =
+			for (int z = 0; z < depth; z++) {
+				distFromCentre = Math
+						.sqrt(((x - width * .5) * (x - width * .5) + (z - depth * .5) * (z - depth * .5)))
+						* 2.0 / width;
+				heightAtPoint =
 						((SimplexNoise.noise((x * noiseScale / width) + seed, z * noiseScale / depth) * .5 + .5) +
 						(SimplexNoise.noise((x * noiseScale * 2 / width) + seed + 10000, z * noiseScale * 2 / depth) * .2))
-							* (1 - distFromCentre) - (1.0 / height);
-//					caveValue = (SimplexNoise.noise((x * noiseScale / width) + seed + 30000, z * noiseScale / depth, y * noiseScale / height) * .5 + .5)
-//							* (1 - ((double) y / height));
+						* (1 - distFromCentre) - (1.0 / height);
+				for (int y = 0; y < height; y++) {
 					caveValue = SimplexNoise.noise((
 							x * noiseScale * 1.5 / width) + seed + 30000,
 							z * noiseScale * 1.5 / depth,
 							y * noiseScale * 1.5 / height) * .5 + .5;
 					set(x, y, z, (y / (double) height) < heightAtPoint && caveValue < caveThreshold ? 1 : 0);
 				}
+			}
 	}
 	
 	private void removeUnreachableCaves() {
