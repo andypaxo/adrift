@@ -1,8 +1,8 @@
 package net.softwarealchemist.adrift;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Stack;
 
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
@@ -23,6 +23,7 @@ public class Terrain {
 
 	public List<Mesh> generateMeshes() {
 		System.out.println("Generating...");
+		long startTime = System.nanoTime();
 		
 		seed = 100;//Math.random() * 1000000.0;
 		noiseScale = 8;//Math.random() * 5 + 3;
@@ -34,9 +35,9 @@ public class Terrain {
 		System.out.println(noiseScale);
 		System.out.println(height);
 		generateVoxelData();
-		long startTime = System.nanoTime();
+		long caveStartTime = System.nanoTime();
 		removeUnreachableCaves();
-		System.out.println(String.format("Cave removal took %.1f seconds", (System.nanoTime() - startTime) / 1000000000.0));
+		System.out.println(String.format("Cave removal took %.1f seconds", (System.nanoTime() - caveStartTime) / 1000000000.0));
 		calculateLights();
 
 		vertexLength = VertexAttribute.Position().numComponents
@@ -53,7 +54,7 @@ public class Terrain {
 				result.add(generateMeshForChunk(chunkSize, x, z));
 		
 		System.out.println(String.format("Generated %d triangles", numPolys));
-		System.out.println("Generation complete");
+		System.out.println(String.format("Generation complete in %.1f seconds", (System.nanoTime() - startTime) / 1000000000.0));
 		return result;
 	}
 
@@ -96,6 +97,7 @@ public class Terrain {
 									* (z - depth * .5)))
 							* 2.0 / width;
 
+					// TODO : Should store this in a height map rather than regenerating for every voxel
 					heightAtPoint =
 						((SimplexNoise.noise((x * noiseScale / width) + seed, z * noiseScale / depth) * .5 + .5) +
 						(SimplexNoise.noise((x * noiseScale * 2 / width) + seed + 10000, z * noiseScale * 2 / depth) * .2))
@@ -111,43 +113,82 @@ public class Terrain {
 	}
 	
 	private void removeUnreachableCaves() {
-		boolean[] reachableAir = new boolean[voxelData.length];
-		floodfill(reachableAir);
+		int[] groupMap = new int[voxelData.length];
+		Arrays.fill(groupMap, -1);
+		int maxGroup = 0;
+		int groupX, groupY, groupZ, minGroup;
+		boolean[][] equivalencyMatrix = new boolean[4096][4096];
 
+		// Label all unoccupied cells with groups
+		for (int y = height - 1; y >= 0; y--) {
+			for (int x = 0; x < width; x++) {
+				for (int z = 0; z < depth; z++)
+				{
+					if (get(x, y, z) > 0)
+						continue;
+					
+					groupX = groupY = groupZ = -1;
+					
+					if (x > 0 && get(x - 1, y, z) == 0)
+						groupX = getInt(groupMap, x - 1, y, z);
+					
+					if (y < height - 1 && get(x, y + 1, z) == 0)
+						groupY = getInt(groupMap, x, y + 1, z);
+					
+					if (z > 0 && get(x, y, z - 1) == 0)
+						groupZ = getInt(groupMap, x, y, z - 1);
+
+					minGroup = minPositive(groupX, groupY, groupZ);
+					
+					if (minGroup < 0)
+					{
+						// New group
+						setInt(groupMap, x, y, z, maxGroup++);
+					} else {
+						// Existing group. Make sure adjacent groups are joined.
+						setInt(groupMap, x, y, z, minGroup);
+						if (groupX >= 0 && groupX != minGroup)
+							equivalencyMatrix[minGroup][groupX] = true;
+						if (groupY >= 0 && groupY != minGroup)
+							equivalencyMatrix[minGroup][groupY] = true;
+						if (groupZ >= 0 && groupZ != minGroup)
+							equivalencyMatrix[minGroup][groupZ] = true;
+					}
+				}
+			}
+		}
+		
+		System.out.println(String.format("Finished with %d groups", maxGroup));
+		
+		// Build full equivalency (group 0 only, as that's all we need)
+		equivalencyMatrix[0][0] = true;
+		for (int groupN = 1; groupN <= maxGroup; groupN++)
+			equivalencyMatrix[0][groupN] |= equivalencyMatrix[groupN][0];
+		
 		for (int x = 0; x < width; x++)
 			for (int z = 0; z < depth; z++)
 				for (int y = 0; y < height; y++)
-					if (get(x, y, z) == 0 && !getBoolean(reachableAir, x, y, z))
+					if (get(x, y, z) == 0 && !(equivalencyMatrix[0][getInt(groupMap, x, y, z)]))
 						set(x, y, z, 1);
 	}
 	
-	private void floodfill(boolean[] vals)
-	{
-	    Stack<IntVector3> stack = new Stack<IntVector3>();
-	    stack.push(new IntVector3(0, height - 1, 0));
-	    int x, y, z, block;
-	    boolean alreadyFilled;
-	    while (stack.size() > 0)
-	    {
-	    	IntVector3 p = stack.pop();
-	    	x = p.x;
-	    	y = p.y;
-	    	z = p.z;
-	    	if (y < 0 || y > height - 1 || x < 0 || x > width - 1 || z < 0 || z > depth - 1)
-	    		continue;
-	    	block = get(x, y, z);
-	    	alreadyFilled = getBoolean(vals, x, y, z);
-	    	if (block == 0 && !alreadyFilled)
-	    	{
-	    		setBoolean(vals, x, y, z);
-	    		stack.push(new IntVector3(x + 1, y, z));
-	    		stack.push(new IntVector3(x - 1, y, z));
-	    		stack.push(new IntVector3(x, y + 1, z));
-	    		stack.push(new IntVector3(x, y - 1, z));
-	    		stack.push(new IntVector3(x, y, z + 1));
-	    		stack.push(new IntVector3(x, y, z - 1));
-	    	}
-	    }
+	private int minPositive(int a, int b, int c) {
+		// All +ve
+		if (a >= 0 && b >= 0 && c >= 0)
+			return a > b ? (b > c ? c : b) : (a > c ? c : a);
+		// 2 +ve
+		if (a >= 0 && b >= 0)
+			return a > b ? b : a;
+		if (b >= 0 && c >= 0)
+			return b > c ? c : b;
+		if (a >= 0 && c >= 0)
+			return a > c ? c : a;
+		// 1 +ve
+		if (a >= 0) return a;
+		if (b >= 0) return b;
+		if (c >= 0) return c;
+		// Nope
+		return -1;
 	}
 	
 	private void calculateLights() {
@@ -189,13 +230,13 @@ public class Terrain {
 	private void setLight(int x, int y, int z, float val) {
 		lightData[y * width * depth + z * width + x] = val;
 	}
-	
-	private boolean getBoolean(boolean[] vals, int x, int y, int z) {
-		return vals[y * width * depth + z * width + x]; 
+
+	private int getInt(int[] vals, int x, int y, int z) {
+		return vals[y * width * depth + z * width + x];
 	}
 
-	private void setBoolean(boolean[] vals, int x, int y, int z) {
-		vals[y * width * depth + z * width + x] = true;
+	private void setInt(int[] vals, int x, int y, int z, int val) {
+		vals[y * width * depth + z * width + x] = val;
 	}
 	
 	private void addYQuad(int x, int y, int z) {
