@@ -20,14 +20,18 @@ public class Terrain {
 	private float[] lightData;
 	private double noiseScale;
 	private int numPolys;
+	private double caveScale;
+	private double caveStretch;
 
 	public List<Mesh> generateMeshes() {
 		System.out.println("Generating...");
 		long startTime = System.nanoTime();
 		
-		seed = 100;//Math.random() * 1000000.0;
-		noiseScale = 8;//Math.random() * 5 + 3;
-		height = 96;//(int) (Math.random() * 64.0 + 32);
+		seed = Math.random() * 1000000.0;
+		noiseScale = Math.random() * 5 + 3;
+		caveScale = Math.random() * 5 + 3;
+		caveStretch = Math.random() + .5;
+		height = (int) (Math.random() * 64.0 + 32);
 
 		voxelData = new int[width * depth * height];
 		lightData = new float[width * depth * height];
@@ -101,9 +105,9 @@ public class Terrain {
 						* (1 - distFromCentre) - (1.0 / height);
 				for (int y = 0; y < height; y++) {
 					caveValue = SimplexNoise.noise((
-							x * noiseScale * 1.5 / width) + seed + 30000,
-							z * noiseScale * 1.5 / depth,
-							y * noiseScale * 1.5 / height) * .5 + .5;
+							x * caveScale / width) + seed + 30000,
+							z * caveScale / depth,
+							y * caveScale / caveStretch / height) * .5 + .5;
 					set(x, y, z, (y / (double) height) < heightAtPoint && caveValue < caveThreshold ? 1 : 0);
 				}
 			}
