@@ -87,6 +87,14 @@ public class AdriftMain extends ApplicationAdapter {
 		modelBatch.render(modelInstance, environment);
 		modelBatch.end();
 	}
+	
+	
+
+	@Override
+	public void resize(int width, int height) {
+		cam.viewportHeight = height;
+		cam.viewportWidth = width;
+	}
 
 	@Override
 	public void dispose() {
