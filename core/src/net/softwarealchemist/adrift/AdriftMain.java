@@ -34,6 +34,7 @@ public class AdriftMain extends ApplicationAdapter {
 		createEnvironment();
 		
 		player = new Entity();
+		player.position.set(terrain.width / 2, 10, 0);
 		inputHandler = new InputHandler(player);
 		
 		modelBatch = new ModelBatch();
@@ -96,7 +97,8 @@ public class AdriftMain extends ApplicationAdapter {
 	}
 	
 	private void moveCameraToMatchPlayer() {
-		cam.position.set(terrain.width / 2, 10, 0);
+		System.out.println(player.position);
+		cam.position.set(player.position);
 		cam.direction.set(0, 0, 1);
 		cam.direction.rotate(player.rotation.x, 1, 0, 0);
 		cam.direction.rotate(player.rotation.y, 0, 1, 0);
