@@ -12,17 +12,20 @@ public class InputHandler {
 	}
 
 	public void handleInput() {
-		doCaptureOrRelease();
+		doStateChanges();
 		doMouseLook();
 		doWalk();
 	}
 
-	private void doCaptureOrRelease() {
+	private void doStateChanges() {
 		if (Gdx.input.justTouched())
 			Gdx.input.setCursorCatched(true);
 		
 		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE))
 			Gdx.input.setCursorCatched(false);
+		
+		if (Gdx.input.isKeyJustPressed(Keys.TAB))
+			GameState.InteractionMode = (GameState.InteractionMode + 1) % 2;
 	}
 
 	private void doMouseLook() {

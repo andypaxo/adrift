@@ -94,7 +94,9 @@ public class Terrain {
 			for (int z = startZ; z < startZ + chunkSize; z++) {
 				for (int y = 0; y < height; y++) {
 					if (get(x, y, z) > 0 && get(x, y + 1, z) == 0)
-						addYQuad(x, y, z);
+						addYQuad(x, y, z, 1);
+					if (get(x, y, z) > 0 && get(x, y - 1, z) == 0)
+						addYQuad(x, y, z, -1);
 					if (get(x, y, z) > 0 && get(x + 1, y, z) == 0)
 						addXQuad(x, y, z, 1);
 					if (get(x, y, z) > 0 && get(x - 1, y, z) == 0)
@@ -270,27 +272,32 @@ public class Terrain {
 		vals[y * width * depth + z * width + x] = val;
 	}
 	
-	private void addYQuad(int x, int y, int z) {
+	private void addYQuad(int x, int y, int z, float direction) {
 		short indexBase = (short) (vertices.length / vertexLength);
 
-		vertices.add(x - .5f, y + .5f, z + .5f);
-		vertices.add(0f, 1f, 0f);
+		vertices.add(x - .5f, y + .5f * direction, z + .5f);
+		vertices.add(0f, direction, 0f);
 		vertices.add(getColor(x, y, z, -1, 1));
 
-		vertices.add(x + .5f, y + .5f, z + .5f);
-		vertices.add(0f, 1f, 0f);
+		vertices.add(x + .5f, y + .5f * direction, z + .5f);
+		vertices.add(0f, direction, 0f);
 		vertices.add(getColor(x, y, z, 1, 1));
 
-		vertices.add(x + .5f, y + .5f, z - .5f);
-		vertices.add(0f, 1f, 0f);
+		vertices.add(x + .5f, y + .5f * direction, z - .5f);
+		vertices.add(0f, direction, 0f);
 		vertices.add(getColor(x, y, z, 1, -1));
 
-		vertices.add(x - .5f, y + .5f, z - .5f);
-		vertices.add(0f, 1f, 0f);
+		vertices.add(x - .5f, y + .5f * direction, z - .5f);
+		vertices.add(0f, direction, 0f);
 		vertices.add(getColor(x, y, z, -1, -1));
 
-		indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
-		indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 3));
+		if (direction > 0) {
+			indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
+			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 3));
+		} else {
+			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 1));
+			indices.add(indexBase, (short) (indexBase + 3), (short) (indexBase + 2));
+		}
 	}
 
 	private void addXQuad(int x, int y, int z, float direction) {
