@@ -1,4 +1,4 @@
-package net.softwarealchemist.adrift;
+package net.softwarealchemist.adrift.util;
 
 public class ShortBuffer {
 	public short[] buffer;

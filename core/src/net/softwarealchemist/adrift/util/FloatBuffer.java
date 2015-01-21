@@ -1,4 +1,4 @@
-package net.softwarealchemist.adrift;
+package net.softwarealchemist.adrift.util;
 
 public class FloatBuffer {
 	public float[] buffer;

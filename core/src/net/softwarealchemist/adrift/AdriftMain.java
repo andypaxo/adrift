@@ -25,11 +25,16 @@ public class AdriftMain extends ApplicationAdapter {
 	private float time = 0;
 	private Terrain terrain;
 	private Environment environment;
+	private Entity player;
+	private InputHandler inputHandler;
 
 	@Override
 	public void create() {
 		createTerrain();
 		createEnvironment();
+		
+		player = new Entity();
+		inputHandler = new InputHandler(player);
 		
 		modelBatch = new ModelBatch();
 		cam = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -38,8 +43,6 @@ public class AdriftMain extends ApplicationAdapter {
 	}
 
 	private void createEnvironment() {
-		//		final PointLight light = new PointLight().set(1, 1, 1, terrain.width * .5f,
-		//				terrain.height * 3, terrain.depth * .3f, terrain.width * terrain.depth);
 		environment = new Environment()
 			.add(new DirectionalLight().set(1f, 1f, 1f, .7f, -1f, .4f))
 			.add(new DirectionalLight().set(.3f, .3f, .3f, -.4f, -1f, -.7f));
@@ -66,30 +69,40 @@ public class AdriftMain extends ApplicationAdapter {
 
 	@Override
 	public void render() {
+		time += Gdx.graphics.getDeltaTime();
+
+		inputHandler.handleInput();
+		//rotateCameraAroundOrigin();
+		moveCameraToMatchPlayer();
+		
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClearColor(.3f, .6f, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-
-		time += Gdx.graphics.getDeltaTime();
-		// renderable.worldTransform.rotate(0, 1, 0, time * 10);
-
-		final float rotation = time * .2f;
-		cam.position.set(//
-				//
-				(float) (terrain.depth * .5f + (Math.sin(rotation) * terrain.width) * .6f), //
-				terrain.height * 1.5f, //
-				(float) (terrain.depth * .5f + (Math.cos(rotation) * terrain.depth) * .6f));
-		cam.lookAt(terrain.width * .5f, 0, terrain.depth * .5f);
-		cam.up.set(0, 1, 0);
-		cam.update();
 
 		modelBatch.begin(cam);
 		modelBatch.render(modelInstance, environment);
 		modelBatch.end();
 	}
-	
-	
 
+	private void rotateCameraAroundOrigin() {
+		final float rotation = time * .2f;
+		cam.position.set(
+				(float) (terrain.depth * .5f + (Math.sin(rotation) * terrain.width) * .6f),
+				terrain.height * 1.5f,
+				(float) (terrain.depth * .5f + (Math.cos(rotation) * terrain.depth) * .6f));
+		cam.lookAt(terrain.width * .5f, 0, terrain.depth * .5f);
+		cam.up.set(0, 1, 0);
+		cam.update();
+	}
+	
+	private void moveCameraToMatchPlayer() {
+		cam.position.set(terrain.width / 2, 10, 0);
+		cam.direction.set(0, 0, 1);
+		cam.direction.rotate(player.rotation.x, 1, 0, 0);
+		cam.direction.rotate(player.rotation.y, 0, 1, 0);
+		cam.update();
+	}
+	
 	@Override
 	public void resize(int width, int height) {
 		cam.viewportHeight = height;

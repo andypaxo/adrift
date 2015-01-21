@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import net.softwarealchemist.adrift.util.FloatBuffer;
+import net.softwarealchemist.adrift.util.ShortBuffer;
+
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.math.Vector3;
@@ -42,6 +45,7 @@ public class Terrain {
 		long caveStartTime = System.nanoTime();
 		removeUnreachableCaves();
 		System.out.println(String.format("Cave removal took %.1f seconds", (System.nanoTime() - caveStartTime) / 1000000000.0));
+		addTrees();
 		calculateLights();
 
 		vertexLength = VertexAttribute.Position().numComponents
@@ -60,6 +64,29 @@ public class Terrain {
 		System.out.println(String.format("Generated %d triangles", numPolys));
 		System.out.println(String.format("Generation complete in %.1f seconds", (System.nanoTime() - startTime) / 1000000000.0));
 		return result;
+	}
+
+	private void addTrees() {
+		for (int i = 0; i < 10; i++)
+			addTree((int) (Math.random() * width), (int) (Math.random() * depth));
+	}
+
+	private void addTree(int x, int z) {		
+		int y;
+		for (y = height - 1; y >= 0; y--)
+			if (get(x, y, z) > 0)
+				break;
+		
+		if (y < 2)
+			return;
+		
+		for (int cY = 0; cY < 4; cY++)
+			set(x, y + cY, z, 1);
+
+		for (int cX = -1; cX <= 1; cX++)
+			for (int cZ = -1; cZ <= 1; cZ++)
+				for (int cY = 4; cY < 7; cY++)
+					set(x + cX, y + cY, z + cZ, 1);
 	}
 
 	private Mesh generateMeshForChunk(final int chunkSize, final int startX, final int startZ) {
@@ -218,6 +245,9 @@ public class Terrain {
 	}
 
 	private void set(int x, int y, int z, int val) {
+		if (y >= height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
+			return;
+		
 		voxelData[y * width * depth + z * width + x] = val;
 	}
 
