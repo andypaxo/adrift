@@ -37,6 +37,7 @@ public class InputHandler {
 		
 		player.rotation.y -= mouseX;
 		player.rotation.x += mouseY;
+		player.rotation.x = Math.min(88f, Math.max(-88f, player.rotation.x));
 	}
 
 	private void doWalk() {
