@@ -40,20 +40,24 @@ public class InputHandler {
 	}
 
 	private void doWalk() {
-		float forward = 0, strafe = 0;
+		float forward = 0, slide = 0, vertical = 0;
 		
-		// TODO : Speeds should be set on player object
 		if (Gdx.input.isKeyPressed(Keys.W) || Gdx.input.isKeyPressed(Keys.UP))
-			forward = 10;
+			forward = 1;
 		if (Gdx.input.isKeyPressed(Keys.S) || Gdx.input.isKeyPressed(Keys.DOWN))
-			forward = -10;
+			forward = -1;
 		if (Gdx.input.isKeyPressed(Keys.A) || Gdx.input.isKeyPressed(Keys.RIGHT))
-			strafe = 10;
+			slide = 1;
 		if (Gdx.input.isKeyPressed(Keys.D) || Gdx.input.isKeyPressed(Keys.LEFT))
-			strafe = -10;
+			slide = -1;
+		if (Gdx.input.isKeyPressed(Keys.SPACE))
+			vertical = 1;
+		if (Gdx.input.isKeyPressed(Keys.SHIFT_LEFT))
+			vertical = -1;
 
 		// TODO : A world should handle the actual position update
-		player.velocity.set(strafe, 0, forward); // Should preserve Y for walking. Clear for flying.
+		// TODO : Speeds should be set on player object
+		player.velocity.set(slide, vertical, forward).nor().scl(10); // Should preserve Y for walking. Clear for flying.
 		player.velocity.rotate(Vector3.X, player.rotation.x); // For flying only
 		player.velocity.rotate(Vector3.Y, player.rotation.y);
 		Vector3 motion = new Vector3(player.velocity).scl(Gdx.graphics.getDeltaTime());
