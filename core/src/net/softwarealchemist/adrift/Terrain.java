@@ -95,7 +95,7 @@ public class Terrain {
 				for (int y = 0; y < height; y++) {
 					if (get(x, y, z) > 0 && get(x, y + 1, z) == 0)
 						addYQuad(x, y, z, 1);
-					if (get(x, y, z) > 0 && get(x, y - 1, z) == 0)
+					if (y > 0 && get(x, y, z) > 0 && get(x, y - 1, z) == 0)
 						addYQuad(x, y, z, -1);
 					if (get(x, y, z) > 0 && get(x + 1, y, z) == 0)
 						addXQuad(x, y, z, 1);
