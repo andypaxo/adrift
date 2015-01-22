@@ -30,12 +30,15 @@ public class AdriftMain extends ApplicationAdapter {
 	private Environment environment;
 	private Entity player;
 	private InputHandler inputHandler;
+	private Stage stage;
 
 	@Override
 	public void create() {
 		createTerrain();
 		createEnvironment();
 		createPlayer();
+		stage = new Stage(terrain);
+		stage.addEntity(player);
 		
 		inputHandler = new InputHandler(player);
 		
@@ -87,6 +90,8 @@ public class AdriftMain extends ApplicationAdapter {
 		time += Gdx.graphics.getDeltaTime();
 
 		inputHandler.handleInput();
+		stage.step(Gdx.graphics.getDeltaTime());
+		
 		if (GameState.InteractionMode == GameState.MODE_FLY)
 			moveCameraToMatchPlayer();
 		else if (GameState.InteractionMode == GameState.MODE_SPECTATE)

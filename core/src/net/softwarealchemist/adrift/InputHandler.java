@@ -56,13 +56,10 @@ public class InputHandler {
 		if (Gdx.input.isKeyPressed(Keys.SHIFT_LEFT))
 			vertical = -1;
 
-		// TODO : A world should handle the actual position update
 		// TODO : Speeds should be set on player object
 		player.velocity.set(slide, vertical, forward).nor().scl(20); // Should preserve Y for walking. Clear for flying.
 		player.velocity.rotate(Vector3.X, player.rotation.x); // For flying only
 		player.velocity.rotate(Vector3.Y, player.rotation.y);
-		Vector3 motion = new Vector3(player.velocity).scl(Gdx.graphics.getDeltaTime());
-		player.position.add(motion);
 	}
 
 }
