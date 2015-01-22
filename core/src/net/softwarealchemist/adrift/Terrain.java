@@ -231,7 +231,9 @@ public class Terrain {
 						float lightLevel = 0;
 						for (int dx = -1; dx <= 1; dx++)
 							for (int dz = -1; dz <= 1; dz++)
-								lightLevel += (get(x + dx, y + 1, z + dz) == 0 ? getLight(x, y + 1, z) : 0.1f) / 9f;
+								lightLevel += get(x + dx, y + 1, z + dz) == 0 ? getLight(x + dx, y + 1, z + dz) : 0.1f;
+						lightLevel -= (get(x, y + 1, z) == 0 ? getLight(x, y + 1, z) : 0.1f);
+						lightLevel /= 8f;
 						setLight(x, y, z, lightLevel);
 					}
 				}
@@ -372,7 +374,11 @@ public class Terrain {
 	private FloatBuffer colorScratchArray = new FloatBuffer(4);
 	private float[] getColor(int x, int y, int z, int xBias, int zBias) {
 		colorScratchVector.set(y < 3 ? sand : (y < height - 26 ? grass : (SimplexNoise.noise(x * noiseScale / width, z * noiseScale / depth + seed) > 0 ? grass : snow)));
-		colorScratchVector.scl(getLight(x, y, z) * .6f + getLight(x + xBias, y, z + zBias) * .4f);
+		colorScratchVector.scl(
+			getLight(x, y, z) * .25f
+			 + getLight(x + xBias, y, z + zBias) * .25f
+			 + getLight(x + xBias, y, z) * .25f
+			 + getLight(x, y, z + zBias) * .25f);
 		colorScratchArray.reset();
 		colorScratchArray.add(colorScratchVector.x, colorScratchVector.y, colorScratchVector.z, 1);
 		return colorScratchArray.buffer;
