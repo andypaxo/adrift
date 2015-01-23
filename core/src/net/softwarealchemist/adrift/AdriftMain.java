@@ -53,7 +53,7 @@ public class AdriftMain extends ApplicationAdapter {
 		terrain = new Terrain();
 		terrain.generate();
 		
-		final TerrainGenerator terrainGenerator = new TerrainGenerator(terrain);
+		final MeshGenerator terrainGenerator = new MeshGenerator(terrain);
 		final Material groundMaterial = new Material(
 				ColorAttribute.createDiffuse(1, 1, 1, 1),
 				ColorAttribute.createAmbient(11f, 1.1f, 1.1f, 1));

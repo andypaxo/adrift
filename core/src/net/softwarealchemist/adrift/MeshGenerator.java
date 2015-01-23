@@ -10,7 +10,7 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.math.Vector3;
 
-public class TerrainGenerator {
+public class MeshGenerator {
 	Terrain terrain;
 	public int width, depth, height;
 
@@ -19,7 +19,7 @@ public class TerrainGenerator {
 	private FloatBuffer vertices;
 	private ShortBuffer indices;
 
-	public TerrainGenerator(Terrain terrain) {
+	public MeshGenerator(Terrain terrain) {
 		this.terrain = terrain;
 		width = terrain.width;
 		depth = terrain.depth;
