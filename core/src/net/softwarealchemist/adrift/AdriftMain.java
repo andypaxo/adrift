@@ -44,7 +44,8 @@ public class AdriftMain extends ApplicationAdapter {
 		
 		modelBatch = new ModelBatch();
 		cam = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.far = terrain.depth * 2;
+		cam.near = .1f;
+		cam.far = terrain.depth;
 		cam.update();
 	}
 
@@ -71,13 +72,14 @@ public class AdriftMain extends ApplicationAdapter {
 		environment = new Environment()
 			.add(new DirectionalLight().set(1f, 1f, 1f, .7f, -1f, .4f))
 			.add(new DirectionalLight().set(.3f, .3f, .3f, -.4f, -1f, -.7f));
-		environment.set(new ColorAttribute(ColorAttribute.Fog, 0.1f, 0.1f, 9f, 2f));
+		environment.set(new ColorAttribute(ColorAttribute.Fog, .3f, .6f, 1, 2f));
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1.f));
 	}
 
 	private void createPlayer() {
 		player = new Entity();
 		player.position.set(terrain.width / 2, 10, 0);
+		player.size.set(.8f, .9f, .8f);
 		
 		final ModelBuilder modelBuilder = new ModelBuilder();
 		playerIndicatorModel = modelBuilder.createArrow(0, 6, 0, 0, 0, 0, .4f, .4f, 12, GL20.GL_TRIANGLES, new Material(ColorAttribute.createDiffuse(1, .2f, .2f, 1)), Usage.Position | Usage.Normal);
@@ -123,6 +125,7 @@ public class AdriftMain extends ApplicationAdapter {
 	
 	private void moveCameraToMatchPlayer() {
 		cam.position.set(player.position);
+		cam.position.y += player.size.y * .25f;
 		cam.direction.set(0, 0, 1);
 		cam.direction.rotate(player.rotation.x, 1, 0, 0);
 		cam.direction.rotate(player.rotation.y, 0, 1, 0);

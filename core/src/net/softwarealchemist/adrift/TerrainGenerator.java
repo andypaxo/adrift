@@ -79,21 +79,22 @@ public class TerrainGenerator {
 	}
 	
 	private void addYQuad(int x, int y, int z, float direction) {
+		float offset = direction > 0 ? 1 : 0;
 		short indexBase = (short) (vertices.length / vertexLength);
 
-		vertices.add(x - .5f, y + .5f * direction, z + .5f);
+		vertices.add(x, y + offset, z + 1);
 		vertices.add(0f, direction, 0f);
 		vertices.add(getColor(x, y, z, -1, 1));
 
-		vertices.add(x + .5f, y + .5f * direction, z + .5f);
+		vertices.add(x + 1, y + offset, z + 1);
 		vertices.add(0f, direction, 0f);
 		vertices.add(getColor(x, y, z, 1, 1));
 
-		vertices.add(x + .5f, y + .5f * direction, z - .5f);
+		vertices.add(x + 1, y + offset, z);
 		vertices.add(0f, direction, 0f);
 		vertices.add(getColor(x, y, z, 1, -1));
 
-		vertices.add(x - .5f, y + .5f * direction, z - .5f);
+		vertices.add(x, y + offset, z);
 		vertices.add(0f, direction, 0f);
 		vertices.add(getColor(x, y, z, -1, -1));
 
@@ -107,21 +108,22 @@ public class TerrainGenerator {
 	}
 
 	private void addXQuad(int x, int y, int z, float direction) {
+		float offset = direction > 0 ? 1 : 0;
 		short indexBase = (short) (vertices.length / vertexLength);
 
-		vertices.add(x + .5f * direction, y - .5f, z + .5f);
+		vertices.add(x + offset, y, z + 1);
 		vertices.add(direction, 0f, 0f);
 		vertices.add(getColor(x, y, z));
 
-		vertices.add(x + .5f * direction, y + .5f, z + .5f);
+		vertices.add(x + offset, y + 1, z + 1);
 		vertices.add(direction, 0f, 0f);
 		vertices.add(getColor(x, y, z));
 
-		vertices.add(x + .5f * direction, y + .5f, z - .5f);
+		vertices.add(x + offset, y + 1, z);
 		vertices.add(direction, 0f, 0f);
 		vertices.add(getColor(x, y, z));
 
-		vertices.add(x + .5f * direction, y - .5f, z - .5f);
+		vertices.add(x + offset, y, z);
 		vertices.add(direction, 0f, 0f);
 		vertices.add(getColor(x, y, z));
 
@@ -135,21 +137,22 @@ public class TerrainGenerator {
 	}
 
 	private void addZQuad(int x, int y, int z, float direction) {
+		float offset = direction > 0 ? 1 : 0;
 		short indexBase = (short) (vertices.length / vertexLength);
 
-		vertices.add(x + .5f, y - .5f, z + .5f * direction);
+		vertices.add(x + 1, y, z + offset);
 		vertices.add(0f, 0f, direction);
 		vertices.add(getColor(x, y, z));
 
-		vertices.add(x + .5f, y + .5f, z + .5f * direction);
+		vertices.add(x + 1, y + 1, z + offset);
 		vertices.add(0f, 0f, direction);
 		vertices.add(getColor(x, y, z));
 
-		vertices.add(x - .5f, y + .5f, z + .5f * direction);
+		vertices.add(x, y + 1, z + offset);
 		vertices.add(0f, 0f, direction);
 		vertices.add(getColor(x, y, z));
 
-		vertices.add(x - .5f, y - .5f, z + .5f * direction);
+		vertices.add(x, y, z + offset);
 		vertices.add(0f, 0f, direction);
 		vertices.add(getColor(x, y, z));
 

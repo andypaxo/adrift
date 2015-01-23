@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Vector3;
 
 public class InputHandler {
 	Entity player;
+	static final float mouseSensitivity = .5f;
 	
 	public InputHandler(Entity player) {
 		this.player = player;
@@ -32,8 +33,8 @@ public class InputHandler {
 		if(!Gdx.input.isCursorCatched())
 			return;
 		
-		int mouseX = Gdx.input.getDeltaX();
-		int mouseY = Gdx.input.getDeltaY();
+		float mouseX = Gdx.input.getDeltaX() * mouseSensitivity;
+		float mouseY = Gdx.input.getDeltaY() * mouseSensitivity;
 		
 		player.rotation.y -= mouseX;
 		player.rotation.x += mouseY;
@@ -57,9 +58,12 @@ public class InputHandler {
 			vertical = -1;
 
 		// TODO : Speeds should be set on player object
-		player.velocity.set(slide, vertical, forward).nor().scl(20); // Should preserve Y for walking. Clear for flying.
+		// Should preserve Y for walking. Clear for flying.
+		player.velocity.set(slide, 0, forward); 
 		player.velocity.rotate(Vector3.X, player.rotation.x); // For flying only
 		player.velocity.rotate(Vector3.Y, player.rotation.y);
+		player.velocity.y += vertical;
+		player.velocity.nor().scl(20);
 	}
 
 }
