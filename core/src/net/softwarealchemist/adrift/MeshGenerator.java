@@ -77,35 +77,6 @@ public class MeshGenerator {
 		indices.reset();
 		return mesh;
 	}
-	
-	private void addYQuad(int x, int y, int z, float direction) {
-		float offset = direction > 0 ? 1 : 0;
-		short indexBase = (short) (vertices.length / vertexLength);
-
-		vertices.add(x, y + offset, z + 1);
-		vertices.add(0f, direction, 0f);
-		vertices.add(getColor(x, y, z, -1, 1));
-
-		vertices.add(x + 1, y + offset, z + 1);
-		vertices.add(0f, direction, 0f);
-		vertices.add(getColor(x, y, z, 1, 1));
-
-		vertices.add(x + 1, y + offset, z);
-		vertices.add(0f, direction, 0f);
-		vertices.add(getColor(x, y, z, 1, -1));
-
-		vertices.add(x, y + offset, z);
-		vertices.add(0f, direction, 0f);
-		vertices.add(getColor(x, y, z, -1, -1));
-
-		if (direction > 0) {
-			indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
-			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 3));
-		} else {
-			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 1));
-			indices.add(indexBase, (short) (indexBase + 3), (short) (indexBase + 2));
-		}
-	}
 
 	private void addXQuad(int x, int y, int z, float direction) {
 		float offset = direction > 0 ? 1 : 0;
@@ -113,19 +84,19 @@ public class MeshGenerator {
 
 		vertices.add(x + offset, y, z + 1);
 		vertices.add(direction, 0f, 0f);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColorForXFace(x + (int)direction, y, z, -1, 1));
 
 		vertices.add(x + offset, y + 1, z + 1);
 		vertices.add(direction, 0f, 0f);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColorForXFace(x + (int)direction, y, z, 1, 1));
 
 		vertices.add(x + offset, y + 1, z);
 		vertices.add(direction, 0f, 0f);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColorForXFace(x + (int)direction, y, z, 1, -1));
 
 		vertices.add(x + offset, y, z);
 		vertices.add(direction, 0f, 0f);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColorForXFace(x + (int)direction, y, z, -1, -1));
 
 		if (direction > 0) {
 			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 1));
@@ -133,6 +104,35 @@ public class MeshGenerator {
 		} else {
 			indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
 			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 3));
+		}
+	}
+	
+	private void addYQuad(int x, int y, int z, float direction) {
+		float offset = direction > 0 ? 1 : 0;
+		short indexBase = (short) (vertices.length / vertexLength);
+
+		vertices.add(x, y + offset, z + 1);
+		vertices.add(0f, direction, 0f);
+		vertices.add(getColorForYFace(x, y, z, -1, 1));
+
+		vertices.add(x + 1, y + offset, z + 1);
+		vertices.add(0f, direction, 0f);
+		vertices.add(getColorForYFace(x, y, z, 1, 1));
+
+		vertices.add(x + 1, y + offset, z);
+		vertices.add(0f, direction, 0f);
+		vertices.add(getColorForYFace(x, y, z, 1, -1));
+
+		vertices.add(x, y + offset, z);
+		vertices.add(0f, direction, 0f);
+		vertices.add(getColorForYFace(x, y, z, -1, -1));
+
+		if (direction > 0) {
+			indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
+			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 3));
+		} else {
+			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 1));
+			indices.add(indexBase, (short) (indexBase + 3), (short) (indexBase + 2));
 		}
 	}
 
@@ -142,19 +142,19 @@ public class MeshGenerator {
 
 		vertices.add(x + 1, y, z + offset);
 		vertices.add(0f, 0f, direction);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColorForZFace(x, y, z + (int)direction, 1, -1));
 
 		vertices.add(x + 1, y + 1, z + offset);
 		vertices.add(0f, 0f, direction);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColorForZFace(x, y, z + (int)direction, 1, 1));
 
 		vertices.add(x, y + 1, z + offset);
 		vertices.add(0f, 0f, direction);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColorForZFace(x, y, z + (int)direction, -1, 1));
 
 		vertices.add(x, y, z + offset);
 		vertices.add(0f, 0f, direction);
-		vertices.add(getColor(x, y, z));
+		vertices.add(getColorForZFace(x, y, z + (int)direction, -1, -1));
 
 		if (direction < 0) {
 			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 1));
@@ -180,13 +180,37 @@ public class MeshGenerator {
 		return colorScratchArray.buffer;	
 	}
 	
-	private float[] getColor(int x, int y, int z, int xBias, int zBias) {
+	private float[] getColorForXFace(int x, int y, int z, int yBias, int zBias) {
+		colorScratchVector.set(y < 3 ? sand : (y < height - 26 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
+		colorScratchVector.scl(
+				terrain.getLight(x, y, z) * .25f
+				+ terrain.getLight(x, y + yBias, z + zBias) * .25f
+				+ terrain.getLight(x, y + yBias, z) * .25f
+				+ terrain.getLight(x, y, z + zBias) * .25f);
+		colorScratchArray.reset();
+		colorScratchArray.add(colorScratchVector.x, colorScratchVector.y, colorScratchVector.z, 1);
+		return colorScratchArray.buffer;
+	}
+	
+	private float[] getColorForYFace(int x, int y, int z, int xBias, int zBias) {
 		colorScratchVector.set(y < 3 ? sand : (y < height - 26 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
 		colorScratchVector.scl(
 			terrain.getLight(x, y, z) * .25f
 			+ terrain.getLight(x + xBias, y, z + zBias) * .25f
 			+ terrain.getLight(x + xBias, y, z) * .25f
 			+ terrain.getLight(x, y, z + zBias) * .25f);
+		colorScratchArray.reset();
+		colorScratchArray.add(colorScratchVector.x, colorScratchVector.y, colorScratchVector.z, 1);
+		return colorScratchArray.buffer;
+	}
+	
+	private float[] getColorForZFace(int x, int y, int z, int xBias, int yBias) {
+		colorScratchVector.set(y < 3 ? sand : (y < height - 26 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
+		colorScratchVector.scl(
+			terrain.getLight(x, y, z) * .25f
+			+ terrain.getLight(x + xBias, y + yBias, z) * .25f
+			+ terrain.getLight(x + xBias, y, z) * .25f
+			+ terrain.getLight(x, y + yBias, z) * .25f);
 		colorScratchArray.reset();
 		colorScratchArray.add(colorScratchVector.x, colorScratchVector.y, colorScratchVector.z, 1);
 		return colorScratchArray.buffer;
