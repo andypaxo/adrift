@@ -79,7 +79,7 @@ public class AdriftMain extends ApplicationAdapter {
 	private void createPlayer() {
 		player = new Entity();
 		player.position.set(terrain.width / 2, 10, 0);
-		player.size.set(.8f, .9f, .8f);
+		player.size.set(.8f, .99f, .8f);
 		
 		final ModelBuilder modelBuilder = new ModelBuilder();
 		playerIndicatorModel = modelBuilder.createArrow(0, 6, 0, 0, 0, 0, .4f, .4f, 12, GL20.GL_TRIANGLES, new Material(ColorAttribute.createDiffuse(1, .2f, .2f, 1)), Usage.Position | Usage.Normal);
@@ -94,7 +94,7 @@ public class AdriftMain extends ApplicationAdapter {
 		inputHandler.handleInput();
 		stage.step(Gdx.graphics.getDeltaTime());
 		
-		if (GameState.InteractionMode == GameState.MODE_FLY)
+		if (GameState.InteractionMode == GameState.MODE_FLY || GameState.InteractionMode == GameState.MODE_WALK)
 			moveCameraToMatchPlayer();
 		else if (GameState.InteractionMode == GameState.MODE_SPECTATE)
 			rotateCameraAroundOrigin();

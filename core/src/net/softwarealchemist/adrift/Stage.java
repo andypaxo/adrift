@@ -20,8 +20,13 @@ public class Stage {
 	
 	public void step(float timeStep) {
 		Vector3 scratch = new Vector3();
-		for (Entity entity : entities) {
+		for (Entity entity : entities) {			
+			// TODO : Special gravity handling should be per entity
+			if (GameState.InteractionMode == GameState.MODE_WALK)
+				entity.velocity.y -= 40 * timeStep;
+			
 			scratch.set(entity.velocity).scl(timeStep);
+			
 			// Very basic (tunneling prone) collision with terrain
 			if (entity.velocity.x != 0) {
 				entity.position.x += scratch.x;
@@ -32,7 +37,7 @@ public class Stage {
 			}
 			if (entity.velocity.y != 0) {
 				entity.position.y += scratch.y;
-				if (collisionWithTerrain(entity)) {
+				if (entity.position.y < entity.size.y * .5f || collisionWithTerrain(entity)) {
 					entity.position.y = resolve(entity.position.y, scratch.y, entity.size.y); // Back out
 					entity.velocity.y = 0;
 				}
@@ -49,8 +54,8 @@ public class Stage {
 
 	private float resolve(float position, float velocity, float size) {
 		return velocity > 0
-			? (float) (Math.ceil(position - velocity) - size * .51f)
-			: (float) (Math.floor(position - velocity) + size * .51f);
+			? (float) (Math.ceil(position - velocity) - size * .5002f)
+			: (float) (Math.floor(position - velocity) + size * .5002f);
 	}
 
 	private boolean collisionWithTerrain(Entity entity) {
