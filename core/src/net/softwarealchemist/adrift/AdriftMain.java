@@ -45,7 +45,7 @@ public class AdriftMain extends ApplicationAdapter {
 		modelBatch = new ModelBatch();
 		cam = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.near = .1f;
-		cam.far = terrain.depth;
+		cam.far = terrain.depth * .75f;
 		cam.update();
 	}
 

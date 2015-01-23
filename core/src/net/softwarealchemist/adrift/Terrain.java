@@ -12,27 +12,29 @@ public class Terrain {
 	private double caveScale;
 	private double caveStretch;
 
-	private void addTrees() {
-		for (int i = 0; i < 10; i++)
-			addTree((int) (Math.random() * width), (int) (Math.random() * depth));
-	}
-
-	private void addTree(int x, int z) {		
-		int y;
-		for (y = height - 1; y >= 0; y--)
-			if (get(x, y, z) > 0)
-				break;
+	public void generate() {
+		System.out.println("Generating voxel data");
+		long startTime = System.nanoTime();
 		
-		if (y < 2)
-			return;
-		
-		for (int cY = 0; cY < 4; cY++)
-			set(x, y + cY, z, 1);
+		seed = Math.random() * 1000000.0;
+		noiseScale = Math.random() * 7 + 3;
+		caveScale = Math.random() * 7 + 3;
+		caveStretch = Math.random() + .5;
+		height = (int) (Math.random() * 64.0 + 32);
 
-		for (int cX = -1; cX <= 1; cX++)
-			for (int cZ = -1; cZ <= 1; cZ++)
-				for (int cY = 4; cY < 7; cY++)
-					set(x + cX, y + cY, z + cZ, 1);
+		voxelData = new int[width * depth * height];
+		lightData = new float[width * depth * height];
+		
+		System.out.println(noiseScale);
+		System.out.println(height);
+		generateVoxelData();
+		long caveStartTime = System.nanoTime();
+		removeUnreachableCaves();
+		System.out.println(String.format("Cave removal took %.1f seconds", (System.nanoTime() - caveStartTime) / 1000000000.0));
+		addTrees();
+		calculateLights();
+
+		System.out.println(String.format("Generation complete in %.1f seconds", (System.nanoTime() - startTime) / 1000000000.0));
 	}
 
 	private void generateVoxelData() {
@@ -190,28 +192,41 @@ public class Terrain {
 		vals[y * width * depth + z * width + x] = val;
 	}
 
-	public void generate() {
-		System.out.println("Generating voxel data");
-		long startTime = System.nanoTime();
-		
-		seed = Math.random() * 1000000.0;
-		noiseScale = Math.random() * 5 + 3;
-		caveScale = Math.random() * 5 + 3;
-		caveStretch = Math.random() + .5;
-		height = (int) (Math.random() * 64.0 + 32);
+	private void addTrees() {
+		for (int i = 0; i < width / 2; i++)
+			addTree((int) (Math.random() * width), (int) (Math.random() * depth));
+	}
 
-		voxelData = new int[width * depth * height];
-		lightData = new float[width * depth * height];
+	private void addTree(int x, int z) {		
+		int y;
+		for (y = height - 1; y >= 0; y--)
+			if (get(x, y, z) > 0)
+				break;
 		
-		System.out.println(noiseScale);
-		System.out.println(height);
-		generateVoxelData();
-		long caveStartTime = System.nanoTime();
-		removeUnreachableCaves();
-		System.out.println(String.format("Cave removal took %.1f seconds", (System.nanoTime() - caveStartTime) / 1000000000.0));
-		addTrees();
-		calculateLights();
+		if (y < 2)
+			return;
 
-		System.out.println(String.format("Generation complete in %.1f seconds", (System.nanoTime() - startTime) / 1000000000.0));
+		int trunkHeight = (int)(Math.random() * 3 + 3);
+		int leavesHeight = (int)(Math.random() * 3 + 4);
+		
+		for (int cY = 0; cY <= trunkHeight; cY++)
+			set(x, y + cY, z, 1);
+		
+		set(x + 1, y + trunkHeight, z, 1);
+		set(x - 1, y + trunkHeight, z, 1);
+		set(x, y + trunkHeight, z - 1, 1);
+		set(x, y + trunkHeight, z + 1, 1);
+
+		for (int cX = -1; cX <= 1; cX++)
+			for (int cZ = -1; cZ <= 1; cZ++)
+				for (int cY = trunkHeight + 1; cY < trunkHeight + leavesHeight; cY++)
+					set(x + cX, y + cY, z + cZ, 1);
+		
+//		set(x + 1, y + trunkHeight + leavesHeight, z, 1);
+//		set(x - 1, y + trunkHeight + leavesHeight, z, 1);
+//		set(x, y + trunkHeight + leavesHeight, z + 1, 1);
+//		set(x, y + trunkHeight + leavesHeight, z - 1, 1);
+		set(x, y + trunkHeight + leavesHeight, z, 1);
+
 	}
 }

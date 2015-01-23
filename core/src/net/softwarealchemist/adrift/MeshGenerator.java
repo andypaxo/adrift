@@ -172,16 +172,8 @@ public class MeshGenerator {
 	private Vector3 colorScratchVector = new Vector3();
 	private FloatBuffer colorScratchArray = new FloatBuffer(4);
 	
-	private float[] getColor(int x, int y, int z) {
-		colorScratchVector.set(y < 3 ? sand : (y < height - 20 ? grass : snow));
-		colorScratchVector.scl(terrain.getLight(x, y, z));
-		colorScratchArray.reset();
-		colorScratchArray.add(colorScratchVector.x, colorScratchVector.y, colorScratchVector.z, 1);
-		return colorScratchArray.buffer;	
-	}
-	
 	private float[] getColorForXFace(int x, int y, int z, int yBias, int zBias) {
-		colorScratchVector.set(y < 3 ? sand : (y < height - 26 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
+		colorScratchVector.set(y < 3 ? sand : (y < height - 16 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
 		colorScratchVector.scl(
 				terrain.getLight(x, y, z) * .25f
 				+ terrain.getLight(x, y + yBias, z + zBias) * .25f
@@ -205,7 +197,7 @@ public class MeshGenerator {
 	}
 	
 	private float[] getColorForZFace(int x, int y, int z, int xBias, int yBias) {
-		colorScratchVector.set(y < 3 ? sand : (y < height - 26 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
+		colorScratchVector.set(y < 3 ? sand : (y < height - 16 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
 		colorScratchVector.scl(
 			terrain.getLight(x, y, z) * .25f
 			+ terrain.getLight(x + xBias, y + yBias, z) * .25f
