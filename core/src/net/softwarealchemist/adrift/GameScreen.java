@@ -2,8 +2,8 @@ package net.softwarealchemist.adrift;
 
 import java.util.List;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -17,7 +17,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 
-public class AdriftMain extends ApplicationAdapter {
+public class GameScreen implements Screen {
 
 	private Model terrainModel;
 	private ModelInstance terrainModelInstance;
@@ -33,8 +33,7 @@ public class AdriftMain extends ApplicationAdapter {
 	private Stage stage;
 	private Hud hud;
 
-	@Override
-	public void create() {
+	public GameScreen() {
 		createTerrain();
 		createEnvironment();
 		createPlayer();
@@ -46,10 +45,11 @@ public class AdriftMain extends ApplicationAdapter {
 		modelBatch = new ModelBatch();
 		cam = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.near = .1f;
-		cam.far = terrain.depth * .75f;
+		cam.far = 1;
 		cam.update();
 		
 		hud = new Hud();
+		time = 0;
 	}
 
 	private void createTerrain() {
@@ -71,6 +71,7 @@ public class AdriftMain extends ApplicationAdapter {
 		terrainModel = modelBuilder.end();
 		terrainModelInstance = new ModelInstance(terrainModel);
 	}
+	
 	private void createEnvironment() {
 		environment = new Environment()
 			.add(new DirectionalLight().set(1f, 1f, 1f, .7f, -1f, .4f))
@@ -81,7 +82,7 @@ public class AdriftMain extends ApplicationAdapter {
 
 	private void createPlayer() {
 		player = new Entity();
-		player.position.set(terrain.width / 2, 10, 0);
+		player.position.set(terrain.width * .6f, 0, 0);
 		player.size.set(.8f, .99f, .8f);
 		
 		final ModelBuilder modelBuilder = new ModelBuilder();
@@ -89,19 +90,21 @@ public class AdriftMain extends ApplicationAdapter {
 		playerIndicatorModelInstance = new ModelInstance(playerIndicatorModel);
 	}
 
-	private long lastFpsCountTime;
-	private int fps;
+//	private long lastFpsCountTime;
+//	private int fps;
 	@Override
-	public void render() {
-		time += Gdx.graphics.getDeltaTime();
+	public void render(float delta) {
+		time += delta;
 
 		inputHandler.handleInput();
-		stage.step(Gdx.graphics.getDeltaTime());
+		stage.step(delta);
 		
 		if (GameState.InteractionMode == GameState.MODE_FLY || GameState.InteractionMode == GameState.MODE_WALK)
 			moveCameraToMatchPlayer();
 		else if (GameState.InteractionMode == GameState.MODE_SPECTATE)
 			rotateCameraAroundOrigin();
+		cam.far = Math.min(terrain.depth * .75f, time * terrain.depth * .1f);
+		cam.update();
 		
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClearColor(.3f, .6f, 1, 1);
@@ -115,13 +118,13 @@ public class AdriftMain extends ApplicationAdapter {
 		}
 		modelBatch.end();
 		
-		fps++;
-		final long time = System.nanoTime();
-		if (time - lastFpsCountTime > 1000000000){
+//		fps++;
+//		final long time = System.nanoTime();
+//		if (time - lastFpsCountTime > 1000000000){
 //			hud.log("FPS : " + fps);
-			lastFpsCountTime = time;
-			fps = 0;
-		}
+//			lastFpsCountTime = time;
+//			fps = 0;
+//		}
 		
 		hud.render();
 	}
@@ -134,7 +137,6 @@ public class AdriftMain extends ApplicationAdapter {
 				(float) (terrain.depth * .5f + (Math.cos(rotation) * terrain.depth) * .6f));
 		cam.lookAt(terrain.width * .5f, 0, terrain.depth * .5f);
 		cam.up.set(0, 1, 0);
-		cam.update();
 	}
 	
 	private void moveCameraToMatchPlayer() {
@@ -143,7 +145,6 @@ public class AdriftMain extends ApplicationAdapter {
 		cam.direction.set(0, 0, 1);
 		cam.direction.rotate(player.rotation.x, 1, 0, 0);
 		cam.direction.rotate(player.rotation.y, 0, 1, 0);
-		cam.update();
 	}
 	
 	@Override
@@ -158,6 +159,30 @@ public class AdriftMain extends ApplicationAdapter {
 		modelBatch.dispose();
 		terrainModel.dispose();
 		playerIndicatorModel.dispose();
+	}
+
+	@Override
+	public void show() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void pause() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void resume() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void hide() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
