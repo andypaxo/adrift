@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -32,7 +31,6 @@ public class AdriftMain extends ApplicationAdapter {
 	private Entity player;
 	private InputHandler inputHandler;
 	private Stage stage;
-	private FPSLogger fpsLogger;
 	private Hud hud;
 
 	@Override
@@ -51,7 +49,6 @@ public class AdriftMain extends ApplicationAdapter {
 		cam.far = terrain.depth * .75f;
 		cam.update();
 		
-		fpsLogger = new FPSLogger();
 		hud = new Hud();
 	}
 
@@ -92,6 +89,8 @@ public class AdriftMain extends ApplicationAdapter {
 		playerIndicatorModelInstance = new ModelInstance(playerIndicatorModel);
 	}
 
+	private long lastFpsCountTime;
+	private int fps;
 	@Override
 	public void render() {
 		time += Gdx.graphics.getDeltaTime();
@@ -115,6 +114,14 @@ public class AdriftMain extends ApplicationAdapter {
 			modelBatch.render(playerIndicatorModelInstance, environment);
 		}
 		modelBatch.end();
+		
+		fps++;
+		final long time = System.nanoTime();
+		if (time - lastFpsCountTime > 1000000000){
+//			hud.log("FPS : " + fps);
+			lastFpsCountTime = time;
+			fps = 0;
+		}
 		
 		hud.render();
 	}
