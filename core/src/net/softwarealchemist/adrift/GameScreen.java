@@ -2,6 +2,8 @@ package net.softwarealchemist.adrift;
 
 import java.util.List;
 
+import net.softwarealchemist.network.Broadcaster;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
@@ -32,6 +34,7 @@ public class GameScreen implements Screen {
 	private InputHandler inputHandler;
 	private Stage stage;
 	private Hud hud;
+	private Broadcaster broadcaster;
 
 	public GameScreen() {
 		createTerrain();
@@ -49,6 +52,9 @@ public class GameScreen implements Screen {
 		cam.update();
 		
 		hud = new Hud();
+		
+		broadcaster = new Broadcaster();
+		broadcaster.start();
 		time = 0;
 	}
 
@@ -159,6 +165,7 @@ public class GameScreen implements Screen {
 		modelBatch.dispose();
 		terrainModel.dispose();
 		playerIndicatorModel.dispose();
+		broadcaster.dispose();
 	}
 
 	@Override

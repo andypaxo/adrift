@@ -1,5 +1,9 @@
 package net.softwarealchemist.adrift;
+import java.net.InetAddress;
 import java.util.ArrayList;
+
+import net.softwarealchemist.network.BroadcastListener;
+import net.softwarealchemist.network.DiscoveryListener;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
@@ -11,23 +15,24 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 
-public class MainMenuScreen implements Screen {
+public class MainMenuScreen implements Screen, DiscoveryListener {
 	SpriteBatch spriteBatch;
 	private BitmapFont font;
 	private OrthographicCamera cam;
-	private ArrayList<String> menuItems;
+	private ArrayList<HostConfig> menuItems;
 	private int selectedMenuItem;
 	private AdriftGame game;
 	private boolean shouldStartGame;
+	private BroadcastListener broadcastListener;
 	
 	public MainMenuScreen(AdriftGame game) {
 		this.game = game;
 		spriteBatch = new SpriteBatch();
 		font = new BitmapFont(Gdx.files.internal("fonts/segoeui.fnt"), Gdx.files.internal("fonts/segoeui.png"), false);
-		menuItems = new ArrayList<String>();
-		menuItems.add("You are adrift");
-		menuItems.add("You are afloat");
-		menuItems.add("You are a vandal");
+		menuItems = new ArrayList<MainMenuScreen.HostConfig>();
+		menuItems.add(new HostConfig("Host game", null));
+		broadcastListener = new BroadcastListener(this);
+		broadcastListener.start();
 		resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 	}
 
@@ -66,13 +71,13 @@ public class MainMenuScreen implements Screen {
 		} else {
 			int y = 0;
 			int itemN = 0;
-			for (String message : menuItems) {
+			for (HostConfig config : menuItems) {
 				if (itemN++ == selectedMenuItem)
 					font.setColor(Color.WHITE);
 				else
 					font.setColor(Color.BLACK);
 				y += font.draw(spriteBatch,
-					message,
+					config.address == null ? config.hostname : "Join " + config.hostname,
 					(int) (Gdx.graphics.getWidth() * -.5f),
 					(int) (Gdx.graphics.getHeight() * .5f) - y)
 					.height;
@@ -107,8 +112,22 @@ public class MainMenuScreen implements Screen {
 
 	@Override
 	public void dispose() {
-		// TODO Auto-generated method stub
+		broadcastListener.dispose();
+	}
 
+	@Override
+	public void notifyDiscovered(String hostname, InetAddress addr) {
+		menuItems.add(new HostConfig(hostname, addr));
+	}
+	
+	private class HostConfig {
+		public String hostname;
+		public InetAddress address;
+		
+		public HostConfig(String hostname, InetAddress address) {
+			this.hostname = hostname;
+			this.address = address;
+		}
 	}
 
 }
