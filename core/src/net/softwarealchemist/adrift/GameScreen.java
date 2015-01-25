@@ -45,7 +45,7 @@ public class GameScreen implements Screen {
 		createEnvironment();
 		createPlayer();
 		terrain = new Terrain();
-		stage = new Stage(terrain);
+		stage = new Stage(terrain, this);
 		stage.addEntity(player);
 		
 		inputHandler = new InputHandler(player);
@@ -58,8 +58,6 @@ public class GameScreen implements Screen {
 		
 		hud = new Hud();
 		
-		broadcaster = new Broadcaster();
-		broadcaster.start();
 		time = 0;
 
 		if (GameState.server == null) {
@@ -67,14 +65,20 @@ public class GameScreen implements Screen {
 			server = new AdriftServer();
 			server.setConfiguration(terrain.getConfiguration());
 			server.start();
-			new Thread(() -> createTerrain()).start();
+			broadcaster = new Broadcaster();
+			broadcaster.start();
+			startTerrainGeneration();
 		}
 		else
 		{
-			client = new AdriftClient(GameState.server);
-			terrain.configure(client.getConfiguration());
+			client = new AdriftClient(GameState.server, stage);
+			client.start();
 		}
 		System.out.println("Game screen initialized");
+	}
+	
+	public void startTerrainGeneration() {
+		new Thread(() -> createTerrain()).start();
 	}
 
 	private void createTerrain() {

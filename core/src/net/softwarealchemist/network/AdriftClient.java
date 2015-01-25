@@ -11,35 +11,43 @@ import com.badlogic.gdx.utils.DataOutput;
 public class AdriftClient {
 
 	private InetAddress server;
+	private ClientListener listener;
+	private boolean isDisposed;
 
-	public AdriftClient(InetAddress server) {
+	public AdriftClient(InetAddress server, ClientListener listener) {
 		this.server = server;
+		this.listener = listener;
 	}
 
-	// Synchronously download configuration
-	public TerrainConfig getConfiguration() {
-		TerrainConfig result = null;
+	public void start() {
+		new Thread(() -> run()).start();
+	}
+	
+	private void run() {		
 		try {
-			final Socket socket = new Socket(server, 10537);
-			final ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-			final DataOutput output = new DataOutput(socket.getOutputStream());
+			Socket socket = new Socket(server, 10537);
+			ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+			DataOutput output = new DataOutput(socket.getOutputStream());
 			
-			output.writeBytes("configuration\n");
-			result = (TerrainConfig) inputStream.readObject();
+			Object received;
+			while (!isDisposed) {
+				received = inputStream.readObject();
+				if (received instanceof TerrainConfig)
+					listener.ConfigurationReceived((TerrainConfig) received);
+			}
 			
 			output.close();
 			inputStream.close();
 			socket.close();
 		} catch (Exception e) {
+			
 			e.printStackTrace();
 			System.exit(110);
 		}
-		return result;
 	}
 
 	public void dispose() {
-		// TODO Auto-generated method stub
-		
+		isDisposed = true;
 	}
 
 }

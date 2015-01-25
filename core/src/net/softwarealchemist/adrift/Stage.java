@@ -3,14 +3,18 @@ package net.softwarealchemist.adrift;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.softwarealchemist.network.ClientListener;
+
 import com.badlogic.gdx.math.Vector3;
 
-public class Stage {
+public class Stage implements ClientListener {
 	Terrain terrain;
 	List<Entity> entities;
+	private GameScreen gameScreen;
 	
-	public Stage(Terrain terrain) {
+	public Stage(Terrain terrain, GameScreen gameScreen) {
 		this.terrain = terrain;
+		this.gameScreen = gameScreen;
 		entities = new ArrayList<Entity>();
 	}
 	
@@ -69,5 +73,11 @@ public class Stage {
 			terrain.get((int)(pos.x - size.x), (int)(pos.y + size.y), (int)(pos.z - size.z)) > 0 ||
 			terrain.get((int)(pos.x - size.x), (int)(pos.y - size.y), (int)(pos.z + size.z)) > 0 ||
 			terrain.get((int)(pos.x - size.x), (int)(pos.y - size.y), (int)(pos.z - size.z)) > 0;
+	}
+
+	@Override
+	public void ConfigurationReceived(TerrainConfig configuration) {
+		terrain.configure(configuration);
+		gameScreen.startTerrainGeneration();
 	}
 }
