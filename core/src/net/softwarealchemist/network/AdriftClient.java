@@ -4,7 +4,8 @@ import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
-import net.softwarealchemist.adrift.TerrainConfig;
+import net.softwarealchemist.adrift.Hud;
+import net.softwarealchemist.adrift.dto.TerrainConfig;
 
 import com.badlogic.gdx.utils.DataOutput;
 
@@ -40,9 +41,7 @@ public class AdriftClient {
 			inputStream.close();
 			socket.close();
 		} catch (Exception e) {
-			
-			e.printStackTrace();
-			System.exit(110);
+			Hud.log("Host disconnected. You're on your own now!");
 		}
 	}
 

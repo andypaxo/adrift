@@ -3,6 +3,8 @@ package net.softwarealchemist.adrift;
 import java.util.Arrays;
 import java.util.Random;
 
+import net.softwarealchemist.adrift.dto.TerrainConfig;
+
 public class Terrain {
 	public int width = 320, depth = 320;
 

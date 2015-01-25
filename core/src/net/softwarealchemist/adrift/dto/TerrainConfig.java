@@ -1,4 +1,4 @@
-package net.softwarealchemist.adrift;
+package net.softwarealchemist.adrift.dto;
 
 import java.io.Serializable;
 

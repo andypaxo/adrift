@@ -7,7 +7,8 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import net.softwarealchemist.adrift.TerrainConfig;
+import net.softwarealchemist.adrift.Hud;
+import net.softwarealchemist.adrift.dto.TerrainConfig;
 
 import com.badlogic.gdx.Gdx;
 
@@ -49,8 +50,7 @@ public class AdriftServer {
 				System.out.println("Got command : " + command);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			Gdx.app.exit();
+			Hud.log("Client disconnected");
 		}
 	}
 

@@ -3,6 +3,7 @@ package net.softwarealchemist.adrift;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.network.ClientListener;
 
 import com.badlogic.gdx.math.Vector3;

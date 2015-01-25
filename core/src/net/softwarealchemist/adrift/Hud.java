@@ -14,12 +14,14 @@ public class Hud {
 	private OrthographicCamera cam;
 	LinkedList<String> messages;
 	private static final int maxMessages = 8; 
+	private static Hud currentInstance;
 
 	public Hud() {
 		spriteBatch = new SpriteBatch();
 		resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		font = new BitmapFont(Gdx.files.internal("fonts/segoeui.fnt"), Gdx.files.internal("fonts/segoeui.png"), false);
 		messages = new LinkedList<String>();
+		currentInstance = this;
 	}
 
 	public void render() {
@@ -41,10 +43,13 @@ public class Hud {
 		cam.update();
 	}
 	
-	public void log(String message) {
-		if (messages.size() >= maxMessages)
-			messages.removeFirst();
-		messages.add(message);
+	public static void log(String message) {
+		if (currentInstance == null) {
+			System.out.println(message);
+		} else {
+			if (currentInstance.messages.size() >= maxMessages)
+				currentInstance.messages.removeFirst();
+			currentInstance.messages.add(message);
+		}
 	}
-
 }
