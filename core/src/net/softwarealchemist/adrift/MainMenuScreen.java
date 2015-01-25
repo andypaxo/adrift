@@ -44,6 +44,17 @@ public class MainMenuScreen implements Screen, DiscoveryListener {
 
 	@Override
 	public void render(float delta) {
+		if (game.isStarted())
+			return;
+		
+		if (shouldStartGame) {
+			GameState.server = menuItems.get(selectedMenuItem).address;
+			Gdx.input.setCursorCatched(true);
+			game.startGame();
+			return;
+		}
+		
+
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClearColor(.3f, .6f, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -51,12 +62,6 @@ public class MainMenuScreen implements Screen, DiscoveryListener {
 		spriteBatch.setProjectionMatrix(cam.combined);
 		spriteBatch.begin();
 
-		
-		if (shouldStartGame) {
-			Gdx.input.setCursorCatched(true);
-			game.startGame();
-		}
-		
 		shouldStartGame |= Gdx.input.isKeyJustPressed(Keys.SPACE) || Gdx.input.isKeyJustPressed(Keys.ENTER);
 		if (Gdx.input.isKeyJustPressed(Keys.DOWN) || Gdx.input.isKeyJustPressed(Keys.S))
 			selectedMenuItem = (selectedMenuItem + 1) % menuItems.size();

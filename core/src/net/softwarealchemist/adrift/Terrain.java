@@ -1,32 +1,22 @@
 package net.softwarealchemist.adrift;
 
 import java.util.Arrays;
+import java.util.Random;
 
 public class Terrain {
-	public int width = 320, depth = 320, height;
-	public double seed;
+	public int width = 320, depth = 320;
 
 	private int[] voxelData;
 	private float[] lightData;
-	private double noiseScale;
-	private double caveScale;
-	private double caveStretch;
+	public TerrainConfig configuration = new TerrainConfig();
 
 	public void generate() {
 		System.out.println("Generating voxel data");
 		long startTime = System.nanoTime();
-		
-		seed = Math.random() * 1000000.0;
-		noiseScale = Math.random() * 7 + 3;
-		caveScale = Math.random() * 7 + 3;
-		caveStretch = Math.random() + .5;
-		height = (int) (Math.random() * 64.0 + 32);
 
-		voxelData = new int[width * depth * height];
-		lightData = new float[width * depth * height];
-		
-		System.out.println(noiseScale);
-		System.out.println(height);
+		voxelData = new int[width * depth * configuration.height];
+		lightData = new float[width * depth * configuration.height];
+
 		generateVoxelData();
 		long caveStartTime = System.nanoTime();
 		removeUnreachableCaves();
@@ -47,15 +37,15 @@ public class Terrain {
 						.sqrt(((x - width * .5) * (x - width * .5) + (z - depth * .5) * (z - depth * .5)))
 						* 2.0 / width;
 				heightAtPoint =
-						((SimplexNoise.noise((x * noiseScale / width) + seed, z * noiseScale / depth) * .5 + .5) +
-						(SimplexNoise.noise((x * noiseScale * 2 / width) + seed + 10000, z * noiseScale * 2 / depth) * .2))
-						* (1 - distFromCentre) - (1.0 / height);
-				for (int y = 0; y < height; y++) {
+						((SimplexNoise.noise((x * configuration.noiseScale / width) + configuration.seed, z * configuration.noiseScale / depth) * .5 + .5) +
+						(SimplexNoise.noise((x * configuration.noiseScale * 2 / width) + configuration.seed + 10000, z * configuration.noiseScale * 2 / depth) * .2))
+						* (1 - distFromCentre) - (1.0 / configuration.height);
+				for (int y = 0; y < configuration.height; y++) {
 					caveValue = SimplexNoise.noise((
-							x * caveScale / width) + seed + 30000,
-							z * caveScale / depth,
-							y * caveScale / caveStretch / height) * .5 + .5;
-					set(x, y, z, (y / (double) height) < heightAtPoint && caveValue < caveThreshold ? 1 : 0);
+							x * configuration.caveScale / width) + configuration.seed + 30000,
+							z * configuration.caveScale / depth,
+							y * configuration.caveScale / configuration.caveStretch / configuration.height) * .5 + .5;
+					set(x, y, z, (y / (double) configuration.height) < heightAtPoint && caveValue < caveThreshold ? 1 : 0);
 				}
 			}
 	}
@@ -68,7 +58,7 @@ public class Terrain {
 		boolean[][] equivalencyMatrix = new boolean[4096][4096];
 
 		// Label all unoccupied cells with groups
-		for (int y = height - 1; y >= 0; y--) {
+		for (int y = configuration.height - 1; y >= 0; y--) {
 			for (int x = 0; x < width; x++) {
 				for (int z = 0; z < depth; z++)
 				{
@@ -80,7 +70,7 @@ public class Terrain {
 					if (x > 0 && get(x - 1, y, z) == 0)
 						groupX = getInt(groupMap, x - 1, y, z);
 					
-					if (y < height - 1 && get(x, y + 1, z) == 0)
+					if (y < configuration.height - 1 && get(x, y + 1, z) == 0)
 						groupY = getInt(groupMap, x, y + 1, z);
 					
 					if (z > 0 && get(x, y, z - 1) == 0)
@@ -115,7 +105,7 @@ public class Terrain {
 		
 		for (int x = 0; x < width; x++)
 			for (int z = 0; z < depth; z++)
-				for (int y = 0; y < height; y++)
+				for (int y = 0; y < configuration.height; y++)
 					if (get(x, y, z) == 0 && !(equivalencyMatrix[0][getInt(groupMap, x, y, z)]))
 						set(x, y, z, 1);
 	}
@@ -140,10 +130,10 @@ public class Terrain {
 	}
 	
 	private void calculateLights() {
-		for (int y = height - 1; y >= 0; y--) {
+		for (int y = configuration.height - 1; y >= 0; y--) {
 			for (int x = 0; x < width; x++) {
 				for (int z = 0; z < depth; z++) {
-					if (y == height - 1)
+					if (y == configuration.height - 1)
 						setLight(x, y, z, 1);
 					else {
 						float lightLevel = 0;
@@ -160,21 +150,21 @@ public class Terrain {
 	}
 
 	public int get(int x, int y, int z) {
-		if (y >= height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
+		if (y >= configuration.height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
 			return 0;
 
 		return voxelData[y * width * depth + z * width + x];
 	}
 
 	private void set(int x, int y, int z, int val) {
-		if (y >= height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
+		if (y >= configuration.height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
 			return;
 		
 		voxelData[y * width * depth + z * width + x] = val;
 	}
 
 	public float getLight(int x, int y, int z) {
-		if (y >= height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
+		if (y >= configuration.height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
 			return 0;
 
 		return lightData[y * width * depth + z * width + x];
@@ -192,22 +182,24 @@ public class Terrain {
 		vals[y * width * depth + z * width + x] = val;
 	}
 
+	private Random rng;
 	private void addTrees() {
+		rng = new Random((int) configuration.seed);
 		for (int i = 0; i < width / 2; i++)
-			addTree((int) (Math.random() * width), (int) (Math.random() * depth));
+			addTree((int) (rng.nextFloat() * width), (int) (rng.nextFloat() * depth));
 	}
 
 	private void addTree(int x, int z) {		
 		int y;
-		for (y = height - 1; y >= 0; y--)
+		for (y = configuration.height - 1; y >= 0; y--)
 			if (get(x, y, z) > 0)
 				break;
 		
 		if (y < 2)
 			return;
 
-		int trunkHeight = (int)(Math.random() * 3 + 3);
-		int leavesHeight = (int)(Math.random() * 3 + 4);
+		int trunkHeight = (int)(rng.nextInt(3) + 3);
+		int leavesHeight = (int)(rng.nextInt(3) + 4);
 		
 		for (int cY = 0; cY <= trunkHeight; cY++)
 			set(x, y + cY, z, 1);
@@ -228,5 +220,21 @@ public class Terrain {
 //		set(x, y + trunkHeight + leavesHeight, z - 1, 1);
 		set(x, y + trunkHeight + leavesHeight, z, 1);
 
+	}
+
+	public void configureRandom() {
+		configuration.seed = Math.random() * 1000000.0;
+		configuration.noiseScale = Math.random() * 7 + 3;
+		configuration.caveScale = Math.random() * 7 + 3;
+		configuration.caveStretch = Math.random() + .5;
+		configuration.height = (int) (Math.random() * 64.0 + 32);
+	}
+
+	public void configure(TerrainConfig config) {
+		configuration = config;
+	}
+
+	public TerrainConfig getConfiguration() {
+		return configuration;
 	}
 }

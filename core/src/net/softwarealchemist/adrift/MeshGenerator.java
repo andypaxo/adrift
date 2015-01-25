@@ -23,7 +23,7 @@ public class MeshGenerator {
 		this.terrain = terrain;
 		width = terrain.width;
 		depth = terrain.depth;
-		height = terrain.height;
+		height = terrain.configuration.height;
 	}
 
 	public List<Mesh> generateMeshes() {

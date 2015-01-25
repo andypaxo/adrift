@@ -35,7 +35,6 @@ public class Broadcaster {
 			final InetAddress addr = InetAddress.getByName("255.255.255.255");
 			final DatagramPacket packet = new DatagramPacket(buf, buf.length, addr, 10538);
 			tx.send(packet);
-			System.out.println("Sent");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

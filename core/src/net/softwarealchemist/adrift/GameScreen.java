@@ -2,6 +2,8 @@ package net.softwarealchemist.adrift;
 
 import java.util.List;
 
+import net.softwarealchemist.network.AdriftClient;
+import net.softwarealchemist.network.AdriftServer;
 import net.softwarealchemist.network.Broadcaster;
 
 import com.badlogic.gdx.Gdx;
@@ -35,11 +37,14 @@ public class GameScreen implements Screen {
 	private Stage stage;
 	private Hud hud;
 	private Broadcaster broadcaster;
+	private AdriftClient client;
+	private AdriftServer server;
+	private boolean terrainGenerationComplete;
 
 	public GameScreen() {
-		createTerrain();
 		createEnvironment();
 		createPlayer();
+		terrain = new Terrain();
 		stage = new Stage(terrain);
 		stage.addEntity(player);
 		
@@ -56,12 +61,28 @@ public class GameScreen implements Screen {
 		broadcaster = new Broadcaster();
 		broadcaster.start();
 		time = 0;
+
+		if (GameState.server == null) {
+			terrain.configureRandom();
+			server = new AdriftServer();
+			server.setConfiguration(terrain.getConfiguration());
+			server.start();
+			new Thread(() -> createTerrain()).start();
+		}
+		else
+		{
+			client = new AdriftClient(GameState.server);
+			terrain.configure(client.getConfiguration());
+		}
+		System.out.println("Game screen initialized");
 	}
 
 	private void createTerrain() {
-		terrain = new Terrain();
 		terrain.generate();
-		
+		terrainGenerationComplete = true;
+	}
+	
+	private void createMeshes() {
 		final MeshGenerator terrainGenerator = new MeshGenerator(terrain);
 		final Material groundMaterial = new Material(
 				ColorAttribute.createDiffuse(1, 1, 1, 1),
@@ -88,7 +109,7 @@ public class GameScreen implements Screen {
 
 	private void createPlayer() {
 		player = new Entity();
-		player.position.set(terrain.width * .6f, 0, 0);
+		player.position.set(120, 0, 0);
 		player.size.set(.8f, .99f, .8f);
 		
 		final ModelBuilder modelBuilder = new ModelBuilder();
@@ -100,30 +121,38 @@ public class GameScreen implements Screen {
 //	private int fps;
 	@Override
 	public void render(float delta) {
+		if (!terrainGenerationComplete)
+			return;
+		
+		if (terrainModel == null)
+			createMeshes();
+		
 		time += delta;
 
 		inputHandler.handleInput();
-		stage.step(delta);
-		
+		if (terrainGenerationComplete)
+			stage.step(delta);
+
 		if (GameState.InteractionMode == GameState.MODE_FLY || GameState.InteractionMode == GameState.MODE_WALK)
 			moveCameraToMatchPlayer();
 		else if (GameState.InteractionMode == GameState.MODE_SPECTATE)
 			rotateCameraAroundOrigin();
 		cam.far = Math.min(terrain.depth * .75f, time * terrain.depth * .1f);
 		cam.update();
-		
+
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClearColor(.3f, .6f, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-
-		modelBatch.begin(cam);
-		modelBatch.render(terrainModelInstance, environment);
-		if (GameState.InteractionMode == GameState.MODE_SPECTATE) {
-			playerIndicatorModelInstance.transform.setToTranslation(player.position);
-			modelBatch.render(playerIndicatorModelInstance, environment);
-		}
-		modelBatch.end();
 		
+		if (terrainGenerationComplete) {
+			modelBatch.begin(cam);
+			modelBatch.render(terrainModelInstance, environment);
+			if (GameState.InteractionMode == GameState.MODE_SPECTATE) {
+				playerIndicatorModelInstance.transform.setToTranslation(player.position);
+				modelBatch.render(playerIndicatorModelInstance, environment);
+			}
+			modelBatch.end();
+		}
 //		fps++;
 //		final long time = System.nanoTime();
 //		if (time - lastFpsCountTime > 1000000000){
@@ -131,7 +160,7 @@ public class GameScreen implements Screen {
 //			lastFpsCountTime = time;
 //			fps = 0;
 //		}
-		
+
 		hud.render();
 	}
 
@@ -139,7 +168,7 @@ public class GameScreen implements Screen {
 		final float rotation = time * .2f;
 		cam.position.set(
 				(float) (terrain.depth * .5f + (Math.sin(rotation) * terrain.width) * .6f),
-				terrain.height * 1.5f,
+				terrain.configuration.height * 1.5f,
 				(float) (terrain.depth * .5f + (Math.cos(rotation) * terrain.depth) * .6f));
 		cam.lookAt(terrain.width * .5f, 0, terrain.depth * .5f);
 		cam.up.set(0, 1, 0);
@@ -166,6 +195,10 @@ public class GameScreen implements Screen {
 		terrainModel.dispose();
 		playerIndicatorModel.dispose();
 		broadcaster.dispose();
+		if (server != null)
+			server.dispose();
+		if (client != null)
+			client.dispose();
 	}
 
 	@Override
