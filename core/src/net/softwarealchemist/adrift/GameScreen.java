@@ -43,10 +43,10 @@ public class GameScreen implements Screen {
 
 	public GameScreen() {
 		createEnvironment();
-		createPlayer();
 		terrain = new Terrain();
 		stage = new Stage(terrain, this);
-		stage.addEntity(player);
+		createPlayer();
+		stage.setPlayer(player);
 		
 		inputHandler = new InputHandler(player);
 		
@@ -64,6 +64,7 @@ public class GameScreen implements Screen {
 			terrain.configureRandom();
 			server = new AdriftServer();
 			server.setConfiguration(terrain.getConfiguration());
+			server.setStage(stage);
 			server.start();
 			broadcaster = new Broadcaster();
 			broadcaster.start();
@@ -115,6 +116,8 @@ public class GameScreen implements Screen {
 		player = new Entity();
 		player.position.set(120, 0, 0);
 		player.size.set(.8f, .99f, .8f);
+		player.name = System.getProperty("user.name");
+		player.id = stage.getNextId();
 		
 		final ModelBuilder modelBuilder = new ModelBuilder();
 		playerIndicatorModel = modelBuilder.createArrow(0, 6, 0, 0, 0, 0, .4f, .4f, 12, GL20.GL_TRIANGLES, new Material(ColorAttribute.createDiffuse(1, .2f, .2f, 1)), Usage.Position | Usage.Normal);
@@ -151,9 +154,12 @@ public class GameScreen implements Screen {
 		if (terrainGenerationComplete) {
 			modelBatch.begin(cam);
 			modelBatch.render(terrainModelInstance, environment);
-			if (GameState.InteractionMode == GameState.MODE_SPECTATE) {
-				playerIndicatorModelInstance.transform.setToTranslation(player.position);
-				modelBatch.render(playerIndicatorModelInstance, environment);
+			for (Entity entity : stage.entities.values()) {
+				//only draw local player if (GameState.InteractionMode == GameState.MODE_SPECTATE) { }
+				synchronized (stage) {
+					playerIndicatorModelInstance.transform.setToTranslation(entity.position);
+					modelBatch.render(playerIndicatorModelInstance, environment);	
+				}
 			}
 			modelBatch.end();
 		}
@@ -228,5 +234,4 @@ public class GameScreen implements Screen {
 		// TODO Auto-generated method stub
 		
 	}
-
 }

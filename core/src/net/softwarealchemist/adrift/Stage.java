@@ -1,7 +1,6 @@
 package net.softwarealchemist.adrift;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.network.ClientListener;
@@ -10,22 +9,24 @@ import com.badlogic.gdx.math.Vector3;
 
 public class Stage implements ClientListener {
 	Terrain terrain;
-	List<Entity> entities;
+	HashMap<Integer, Entity> entities;
 	private GameScreen gameScreen;
+	private int highestId;
+	private Entity player;
 	
 	public Stage(Terrain terrain, GameScreen gameScreen) {
 		this.terrain = terrain;
 		this.gameScreen = gameScreen;
-		entities = new ArrayList<Entity>();
+		entities = new HashMap<Integer, Entity>();
 	}
 	
 	public void addEntity(Entity entity) {
-		entities.add(entity);
+		entities.put(entity.getKey(), entity);
 	}
 	
 	public void step(float timeStep) {
 		Vector3 scratch = new Vector3();
-		for (Entity entity : entities) {			
+		for (Entity entity : entities.values()) {			
 			// TODO : Special gravity handling should be per entity
 			if (GameState.InteractionMode == GameState.MODE_WALK)
 				entity.velocity.y -= 40 * timeStep;
@@ -77,8 +78,38 @@ public class Stage implements ClientListener {
 	}
 
 	@Override
-	public void ConfigurationReceived(TerrainConfig configuration) {
+	public void configurationReceived(TerrainConfig configuration) {
 		terrain.configure(configuration);
 		gameScreen.startTerrainGeneration();
+	}
+
+	public int getNextId() {
+		return highestId++;
+	}
+
+	@Override
+	public void setPlayerId(int playerId) {
+		entities.remove(player.getKey());
+		player.id = playerId;
+		addEntity(player);
+	}
+
+	public void setPlayer(Entity player) {
+		addEntity(player);
+		this.player = player;
+	}
+
+	@Override
+	public Entity getPlayer() {
+		return player;
+	}
+	
+	public void updateEntity(Entity entity) {
+		if (entities.containsKey(entity.getKey())) {
+			entities.get(entity.getKey()).updateFrom(entity);
+		} else {
+			addEntity(entity);
+			Hud.log(entity.name + " has joined the party");
+		}
 	}
 }

@@ -10,7 +10,7 @@ import java.util.HashMap;
 public class BroadcastListener {
 
 	DatagramSocket rx;
-	private InetAddress myAddress;
+	//private InetAddress myAddress;
 	private HashMap<String, InetAddress> knownHosts;
 	private DiscoveryListener discoveryListener;
 	boolean stopped;
@@ -18,7 +18,7 @@ public class BroadcastListener {
 	public BroadcastListener(DiscoveryListener discoveryListener) {
 		try {
 			rx = new DatagramSocket(10538, InetAddress.getByName("0.0.0.0"));
-			myAddress = InetAddress.getLocalHost();
+			//myAddress = InetAddress.getLocalHost();
 			knownHosts = new HashMap<String, InetAddress>();
 			this.discoveryListener = discoveryListener;
 		} catch (IOException e) {
