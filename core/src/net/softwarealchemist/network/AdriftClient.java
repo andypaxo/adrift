@@ -46,6 +46,12 @@ public class AdriftClient {
 					final ClientSetup clientSetup = (ClientSetup) received;
 					listener.configurationReceived(clientSetup.terrainConfig);
 					listener.setPlayerId(clientSetup.playerId);
+				} else if (received instanceof StateUpdate) {
+					Entity localPlayer = listener.getPlayer();
+					for (Entity entity : ((StateUpdate) received).getUpdatedEntities()) {
+						if (entity.id != localPlayer.id)
+							listener.updateEntity(entity);
+					}
 				}
 			}
 			
@@ -63,7 +69,6 @@ public class AdriftClient {
 			Entity localPlayer = listener.getPlayer();
 			ArrayList<Entity> updatedEntities = new ArrayList<Entity>();
 			updatedEntities.add(localPlayer);
-			Hud.log("Player position " + updatedEntities.get(0).position);
 			output.writeObject(new StateUpdate(updatedEntities));
 			output.reset();
 		} catch (Exception e) {

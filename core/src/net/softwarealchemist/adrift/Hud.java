@@ -29,12 +29,14 @@ public class Hud {
 		spriteBatch.begin();
 		
 		int y = 0;
-		for (String message : messages)
-			y += font.draw(spriteBatch,
-				message,
-				(int) (Gdx.graphics.getWidth() * -.5f),
-				(int) (Gdx.graphics.getHeight() * .5f) - y)
-				.height;
+		synchronized (this) {
+			for (String message : messages)
+				y += font.draw(spriteBatch,
+					message,
+					(int) (Gdx.graphics.getWidth() * -.5f),
+					(int) (Gdx.graphics.getHeight() * .5f) - y)
+					.height;
+		}
 		spriteBatch.end();
 	}
 	
@@ -47,9 +49,11 @@ public class Hud {
 		if (currentInstance == null) {
 			System.out.println(message);
 		} else {
-			if (currentInstance.messages.size() >= maxMessages)
-				currentInstance.messages.removeFirst();
-			currentInstance.messages.add(message);
+			synchronized (currentInstance) {
+				if (currentInstance.messages.size() >= maxMessages)
+					currentInstance.messages.removeFirst();
+				currentInstance.messages.add(message);
+			}
 		}
 	}
 }

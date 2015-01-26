@@ -7,4 +7,5 @@ public interface ClientListener {
 	public void configurationReceived(TerrainConfig configuration);
 	public void setPlayerId(int playerId);
 	public Entity getPlayer();
+	public void updateEntity(Entity entity);
 }

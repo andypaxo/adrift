@@ -9,7 +9,7 @@ import com.badlogic.gdx.math.Vector3;
 
 public class Stage implements ClientListener {
 	Terrain terrain;
-	HashMap<Integer, Entity> entities;
+	public HashMap<Integer, Entity> entities;
 	private GameScreen gameScreen;
 	private int highestId;
 	private Entity player;
