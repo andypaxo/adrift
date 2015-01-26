@@ -20,6 +20,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.Vector3;
 
 public class GameScreen implements Screen {
 
@@ -120,7 +121,7 @@ public class GameScreen implements Screen {
 		player.id = stage.getNextId();
 		
 		final ModelBuilder modelBuilder = new ModelBuilder();
-		playerIndicatorModel = modelBuilder.createArrow(0, 6, 0, 0, 0, 0, .4f, .4f, 12, GL20.GL_TRIANGLES, new Material(ColorAttribute.createDiffuse(1, .2f, .2f, 1)), Usage.Position | Usage.Normal);
+		playerIndicatorModel = modelBuilder.createBox(player.size.x, player.size.y, player.size.z, new Material(ColorAttribute.createDiffuse(1, .2f, .2f, 1)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		playerIndicatorModelInstance = new ModelInstance(playerIndicatorModel);
 	}
 
@@ -157,7 +158,9 @@ public class GameScreen implements Screen {
 			for (Entity entity : stage.entities.values()) {
 				//only draw local player if (GameState.InteractionMode == GameState.MODE_SPECTATE) { }
 				synchronized (stage) {
+//					playerIndicatorModelInstance.transform.setToWorld(entity.position, entity.rotation, Vector3.Y);
 					playerIndicatorModelInstance.transform.setToTranslation(entity.position);
+					playerIndicatorModelInstance.transform.rotate(Vector3.Y, entity.rotation.y);
 					modelBatch.render(playerIndicatorModelInstance, environment);	
 				}
 			}
