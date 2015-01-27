@@ -166,9 +166,13 @@ public class Terrain {
 	}
 
 	public float getLight(int x, int y, int z) {
-		if (y >= configuration.height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
-			return 0;
 
+		if (y >= configuration.height || x >= width || x < 0 || z >= depth || z < 0)
+			return 1;
+		
+		if (y < 0)
+			return getLight(x, 0, z);
+		
 		return lightData[y * width * depth + z * width + x];
 	}
 	

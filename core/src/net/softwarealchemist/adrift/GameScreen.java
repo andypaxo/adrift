@@ -21,6 +21,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector3;
 
 public class GameScreen implements Screen {
@@ -42,6 +43,9 @@ public class GameScreen implements Screen {
 	private AdriftClient client;
 	private AdriftServer server;
 	private boolean terrainGenerationComplete;
+	private List<Mesh> waterMeshes;
+	private ShaderProgram waterShader;
+	private float[] fogColor;
 
 	public GameScreen() {
 		createEnvironment();
@@ -104,13 +108,21 @@ public class GameScreen implements Screen {
 		}
 		terrainModel = modelBuilder.end();
 		terrainModelInstance = new ModelInstance(terrainModel);
+		
+		waterMeshes = terrainGenerator.generateMeshesForWater();
+		waterShader = new ShaderProgram(Gdx.files.internal("shaders/waterVertex.glsl"), Gdx.files.internal("shaders/waterFragment.glsl"));
+		if (!waterShader.isCompiled()) {
+			System.out.println(waterShader.getLog());
+			Gdx.app.exit();
+		}
 	}
 	
 	private void createEnvironment() {
+		fogColor = new float[] {.3f, .6f, 1, 1f};
 		environment = new Environment()
 			.add(new DirectionalLight().set(1f, 1f, 1f, .7f, -1f, .4f))
 			.add(new DirectionalLight().set(.3f, .3f, .3f, -.4f, -1f, -.7f));
-		environment.set(new ColorAttribute(ColorAttribute.Fog, .3f, .6f, 1, 2f));
+		environment.set(new ColorAttribute(ColorAttribute.Fog, fogColor[0], fogColor[1], fogColor[2], fogColor[3]));
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1.f));
 	}
 
@@ -158,6 +170,7 @@ public class GameScreen implements Screen {
 		if (terrainGenerationComplete) {
 			modelBatch.begin(cam);
 			modelBatch.render(terrainModelInstance, environment);
+			// TODO Might be able to do this in a single call
 			for (Entity entity : stage.entities.values()) {
 				//only draw local player if (GameState.InteractionMode == GameState.MODE_SPECTATE) { }
 				synchronized (stage) {
@@ -172,6 +185,18 @@ public class GameScreen implements Screen {
 				}
 			}
 			modelBatch.end();
+			
+			waterShader.begin();
+			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+			Gdx.gl.glEnable(GL20.GL_BLEND);
+			Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+			waterShader.setUniformMatrix("u_projectionViewMatrix", cam.combined);
+			waterShader.setUniform4fv("u_fogColor", fogColor, 0, 4);
+			waterShader.setUniform4fv("u_cameraPosition", new float [] { cam.position.x, cam.position.y, cam.position.z, 1.1881f / (cam.far * cam.far) } , 0, 4);
+			waterShader.setUniformf("u_time", time);
+			for (Mesh waterMesh : waterMeshes)
+				waterMesh.render(waterShader, GL20.GL_TRIANGLES);
+			waterShader.end();
 		}
 //		fps++;
 //		final long time = System.nanoTime();
@@ -214,6 +239,9 @@ public class GameScreen implements Screen {
 		modelBatch.dispose();
 		terrainModel.dispose();
 		playerIndicatorModel.dispose();
+		for (Mesh waterMesh : waterMeshes)
+			waterMesh.dispose();
+		waterShader.dispose();
 		broadcaster.dispose();
 		if (server != null)
 			server.dispose();

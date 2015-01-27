@@ -13,6 +13,7 @@ import com.badlogic.gdx.math.Vector3;
 public class MeshGenerator {
 	Terrain terrain;
 	public int width, depth, height;
+	private int chunkSize = 32;
 
 	private int numPolys;
 	private int vertexLength;
@@ -24,31 +25,48 @@ public class MeshGenerator {
 		width = terrain.width;
 		depth = terrain.depth;
 		height = terrain.configuration.height;
+
+		vertexLength = VertexAttribute.Position().numComponents
+				+ VertexAttribute.Normal().numComponents
+				+ VertexAttribute.ColorUnpacked().numComponents;
+		vertices = new FloatBuffer(chunkSize * chunkSize * vertexLength * 64);
+		indices = new ShortBuffer(chunkSize * chunkSize * 64);
 	}
 
 	public List<Mesh> generateMeshes() {
 		System.out.println("Generating vertex data");
 		long startTime = System.nanoTime();
 		
-		vertexLength = VertexAttribute.Position().numComponents
-				+ VertexAttribute.Normal().numComponents
-				+ VertexAttribute.ColorUnpacked().numComponents;
-
 		final ArrayList<Mesh> result = new ArrayList<Mesh>();
-		final int chunkSize = 32;
-		vertices = new FloatBuffer(chunkSize * chunkSize * vertexLength * 64);
-		indices = new ShortBuffer(chunkSize * chunkSize * 64);
 
 		for (int x = 0; x < width; x += chunkSize)
 			for (int z = 0; z < depth; z += chunkSize)
-				result.add(generateMeshForChunk(chunkSize, x, z));
+				result.add(generateMeshForChunk(x, z));
 		
 		System.out.println(String.format("Generated %d triangles", numPolys));
 		System.out.println(String.format("Generation complete in %.1f seconds", (System.nanoTime() - startTime) / 1000000000.0));
 		return result;
 	}
+	
+	public List<Mesh> generateMeshesForWater() {
+		final ArrayList<Mesh> result = new ArrayList<Mesh>();
+		final int borderSize = 3;
+		for (int x = -chunkSize * borderSize; x < width + chunkSize * borderSize; x += chunkSize)
+			for (int z = -chunkSize * borderSize; z < depth + chunkSize * borderSize; z += chunkSize)
+				result.add(generateMeshForWaterChunk(x, z));
+		return result;
+	}
 
-	private Mesh generateMeshForChunk(final int chunkSize, final int startX, final int startZ) {
+	private Mesh generateMeshForWaterChunk(final int startX, final int startZ) {
+		for (int x = startX; x < startX + chunkSize; x++)
+			for (int z = startZ; z < startZ + chunkSize; z++)
+				if (terrain.get(x, 0, z) == 0)
+					addYQuad(x, -1, z, 1);
+
+		return createMeshFromCurrentData();
+	}
+
+	private Mesh generateMeshForChunk(final int startX, final int startZ) {
 		for (int x = startX; x < startX + chunkSize; x++) {
 			for (int z = startZ; z < startZ + chunkSize; z++) {
 				for (int y = 0; y < height; y++) {
@@ -68,6 +86,10 @@ public class MeshGenerator {
 			}
 		}
 
+		return createMeshFromCurrentData();
+	}
+
+	private Mesh createMeshFromCurrentData() {
 		numPolys +=  indices.length / 3;
 		final Mesh mesh = new Mesh(true, vertices.length, indices.length,
 				VertexAttribute.Position(), VertexAttribute.Normal(), VertexAttribute.ColorUnpacked());
@@ -165,6 +187,7 @@ public class MeshGenerator {
 		}
 	}
 
+	private final Vector3 water = new Vector3(.6f, 1f, 1);
 	private final Vector3 sand = new Vector3(1f, .8f, .6f);
 	private final Vector3 grass = new Vector3(.5f, .6f, .2f);
 	private final Vector3 snow = new Vector3(.9f, .9f, 1f);
@@ -185,7 +208,7 @@ public class MeshGenerator {
 	}
 	
 	private float[] getColorForYFace(int x, int y, int z, int xBias, int zBias) {
-		colorScratchVector.set(y < 3 ? sand : (y < height - 26 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
+		colorScratchVector.set(y < 0 ? water : (y < 3 ? sand : (y < height - 26 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow))));
 		colorScratchVector.scl(
 			terrain.getLight(x, y, z) * .25f
 			+ terrain.getLight(x + xBias, y, z + zBias) * .25f
