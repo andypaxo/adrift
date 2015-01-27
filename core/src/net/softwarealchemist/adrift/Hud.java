@@ -1,5 +1,6 @@
 package net.softwarealchemist.adrift;
 
+import java.util.Collection;
 import java.util.LinkedList;
 
 import com.badlogic.gdx.Gdx;
@@ -24,7 +25,7 @@ public class Hud {
 		currentInstance = this;
 	}
 
-	public void render() {
+	public void render(Collection<Label2d> labels) {
 		spriteBatch.setProjectionMatrix(cam.combined);
 		spriteBatch.begin();
 		
@@ -37,6 +38,11 @@ public class Hud {
 					(int) (Gdx.graphics.getHeight() * .5f) - y)
 					.height;
 		}
+		for (Label2d label : labels)
+			font.draw(spriteBatch,
+					label.text,
+					label.position.x - (int) (Gdx.graphics.getWidth() * .5f),
+					label.position.y - (int) (Gdx.graphics.getHeight() * .5f) + 32);
 		spriteBatch.end();
 	}
 	

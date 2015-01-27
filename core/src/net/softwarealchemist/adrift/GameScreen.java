@@ -1,5 +1,6 @@
 package net.softwarealchemist.adrift;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.softwarealchemist.network.AdriftClient;
@@ -152,6 +153,8 @@ public class GameScreen implements Screen {
 		Gdx.gl.glClearColor(.3f, .6f, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		
+		final ArrayList<Label2d> labels = new ArrayList<Label2d>();
+		
 		if (terrainGenerationComplete) {
 			modelBatch.begin(cam);
 			modelBatch.render(terrainModelInstance, environment);
@@ -161,7 +164,11 @@ public class GameScreen implements Screen {
 //					playerIndicatorModelInstance.transform.setToWorld(entity.position, entity.rotation, Vector3.Y);
 					playerIndicatorModelInstance.transform.setToTranslation(entity.position);
 					playerIndicatorModelInstance.transform.rotate(Vector3.Y, entity.rotation.y);
-					modelBatch.render(playerIndicatorModelInstance, environment);	
+					modelBatch.render(playerIndicatorModelInstance, environment);
+					if ((entity != player || GameState.InteractionMode == GameState.MODE_SPECTATE) && cam.frustum.pointInFrustum(entity.position)) {
+						final Vector3 labelPos = cam.project(new Vector3(entity.position));
+						labels.add(new Label2d(labelPos, entity.name));
+					}
 				}
 			}
 			modelBatch.end();
@@ -174,7 +181,7 @@ public class GameScreen implements Screen {
 //			fps = 0;
 //		}
 
-		hud.render();
+		hud.render(labels);
 	}
 
 	private void rotateCameraAroundOrigin() {
