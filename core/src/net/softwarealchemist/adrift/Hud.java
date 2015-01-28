@@ -1,7 +1,9 @@
 package net.softwarealchemist.adrift;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -14,6 +16,7 @@ public class Hud {
 	private BitmapFont font;
 	private OrthographicCamera cam;
 	LinkedList<String> messages;
+	HashMap<String, String> info;
 	private static final int maxMessages = 8; 
 	private static Hud currentInstance;
 
@@ -22,6 +25,7 @@ public class Hud {
 		resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		font = new BitmapFont(Gdx.files.internal("fonts/segoeui.fnt"), Gdx.files.internal("fonts/segoeui.png"), false);
 		messages = new LinkedList<String>();
+		info = new HashMap<String, String>();
 		currentInstance = this;
 	}
 
@@ -38,6 +42,13 @@ public class Hud {
 					(int) (Gdx.graphics.getHeight() * .5f) - y)
 					.height;
 		}
+		y = (int) font.getLineHeight() + 6;
+		for (Map.Entry<String, String> entry : info.entrySet())
+			y += font.draw(spriteBatch,
+					entry.getKey() + " : " + entry.getValue(),
+					(int) (Gdx.graphics.getWidth() * -.5f),
+					(int) (Gdx.graphics.getHeight() * -.5f) + y)
+					.height;
 		for (Label2d label : labels)
 			font.draw(spriteBatch,
 					label.text,
@@ -59,6 +70,14 @@ public class Hud {
 				if (currentInstance.messages.size() >= maxMessages)
 					currentInstance.messages.removeFirst();
 				currentInstance.messages.add(message);
+			}
+		}
+	}
+	
+	public static void setInfo(String key, String value) {
+		if (currentInstance != null)  {
+			synchronized (currentInstance) {
+				currentInstance.info.put(key, value);
 			}
 		}
 	}

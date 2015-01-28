@@ -138,8 +138,8 @@ public class GameScreen implements Screen {
 		playerIndicatorModelInstance = new ModelInstance(playerIndicatorModel);
 	}
 
-//	private long lastFpsCountTime;
-//	private int fps;
+	private long lastFpsCountTime;
+	private int fps;
 	@Override
 	public void render(float delta) {
 		if (!terrainGenerationComplete)
@@ -198,13 +198,13 @@ public class GameScreen implements Screen {
 				waterMesh.render(waterShader, GL20.GL_TRIANGLES);
 			waterShader.end();
 		}
-//		fps++;
-//		final long time = System.nanoTime();
-//		if (time - lastFpsCountTime > 1000000000){
-//			hud.log("FPS : " + fps);
-//			lastFpsCountTime = time;
-//			fps = 0;
-//		}
+		fps++;
+		final long time = System.nanoTime();
+		if (time - lastFpsCountTime > 1000000000){
+			Hud.setInfo("FPS", "" + fps);
+			lastFpsCountTime = time;
+			fps = 0;
+		}
 
 		hud.render(labels);
 	}
