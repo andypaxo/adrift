@@ -158,7 +158,7 @@ public class GameScreen implements Screen {
 			moveCameraToMatchPlayer();
 		else if (GameState.InteractionMode == GameState.MODE_SPECTATE)
 			rotateCameraAroundOrigin();
-		cam.far = Math.min(terrain.depth * .75f, time * terrain.depth * .1f);
+		cam.far = Math.min(terrain.configuration.depth * .75f, time * terrain.configuration.depth * .1f);
 		cam.update();
 
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -212,10 +212,10 @@ public class GameScreen implements Screen {
 	private void rotateCameraAroundOrigin() {
 		final float rotation = time * .2f;
 		cam.position.set(
-				(float) (terrain.depth * .5f + (Math.sin(rotation) * terrain.width) * .6f),
+				(float) (terrain.configuration.depth * .5f + (Math.sin(rotation) * terrain.configuration.width) * .6f),
 				terrain.configuration.height * 1.5f,
-				(float) (terrain.depth * .5f + (Math.cos(rotation) * terrain.depth) * .6f));
-		cam.lookAt(terrain.width * .5f, 0, terrain.depth * .5f);
+				(float) (terrain.configuration.depth * .5f + (Math.cos(rotation) * terrain.configuration.depth) * .6f));
+		cam.lookAt(terrain.configuration.width * .5f, 0, terrain.configuration.depth * .5f);
 		cam.up.set(0, 1, 0);
 	}
 	

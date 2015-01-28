@@ -4,20 +4,21 @@ import java.util.Arrays;
 import java.util.Random;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
+import net.softwarealchemist.adrift.util.IntMapReader;
 
 public class Terrain {
-	public int width = 320, depth = 320;
-
 	private int[] voxelData;
 	private float[] lightData;
 	public TerrainConfig configuration = new TerrainConfig();
+	private Random rng;
+	IntMapReader regions;
 
 	public void generate() {
 		System.out.println("Generating voxel data");
 		long startTime = System.nanoTime();
 
-		voxelData = new int[width * depth * configuration.height];
-		lightData = new float[width * depth * configuration.height];
+		voxelData = new int[configuration.width * configuration.depth * configuration.height];
+		lightData = new float[voxelData.length];
 
 		generateVoxelData();
 		long caveStartTime = System.nanoTime();
@@ -33,19 +34,19 @@ public class Terrain {
 		double heightAtPoint, distFromCentre;
 		double caveValue, caveThreshold = .8f;
 		
-		for (int x = 0; x < width; x++)
-			for (int z = 0; z < depth; z++) {
+		for (int x = 0; x < configuration.width; x++)
+			for (int z = 0; z < configuration.depth; z++) {
 				distFromCentre = Math
-						.sqrt(((x - width * .5) * (x - width * .5) + (z - depth * .5) * (z - depth * .5)))
-						* 2.0 / width;
+						.sqrt(((x - configuration.width * .5) * (x - configuration.width * .5) + (z - configuration.depth * .5) * (z - configuration.depth * .5)))
+						* 2.0 / configuration.width;
 				heightAtPoint =
-						((SimplexNoise.noise((x * configuration.noiseScale / width) + configuration.seed, z * configuration.noiseScale / depth) * .5 + .5) +
-						(SimplexNoise.noise((x * configuration.noiseScale * 2 / width) + configuration.seed + 10000, z * configuration.noiseScale * 2 / depth) * .2))
+						((SimplexNoise.noise((x * configuration.noiseScale / configuration.width) + configuration.seed, z * configuration.noiseScale / configuration.depth) * .5 + .5) +
+						(SimplexNoise.noise((x * configuration.noiseScale * 2 / configuration.width) + configuration.seed + 10000, z * configuration.noiseScale * 2 / configuration.depth) * .2))
 						* (1 - distFromCentre) - (1.0 / configuration.height);
 				for (int y = 0; y < configuration.height; y++) {
 					caveValue = SimplexNoise.noise((
-							x * configuration.caveScale / width) + configuration.seed + 30000,
-							z * configuration.caveScale / depth,
+							x * configuration.caveScale / configuration.width) + configuration.seed + 30000,
+							z * configuration.caveScale / configuration.depth,
 							y * configuration.caveScale / configuration.caveStretch / configuration.height) * .5 + .5;
 					set(x, y, z, (y / (double) configuration.height) < heightAtPoint && caveValue < caveThreshold ? 1 : 0);
 				}
@@ -53,16 +54,17 @@ public class Terrain {
 	}
 	
 	private void removeUnreachableCaves() {
-		int[] groupMap = new int[voxelData.length];
-		Arrays.fill(groupMap, -1);
+		int[] regionData = new int[voxelData.length];
+		regions = new IntMapReader(configuration.width, configuration.depth, configuration.height, 0, regionData);
+		Arrays.fill(regionData, -1);
 		int maxGroup = 0;
 		int groupX, groupY, groupZ, minGroup;
 		boolean[][] equivalencyMatrix = new boolean[4096][4096];
 
 		// Label all unoccupied cells with groups
 		for (int y = configuration.height - 1; y >= 0; y--) {
-			for (int x = 0; x < width; x++) {
-				for (int z = 0; z < depth; z++)
+			for (int x = 0; x < configuration.width; x++) {
+				for (int z = 0; z < configuration.depth; z++)
 				{
 					if (get(x, y, z) > 0)
 						continue;
@@ -70,23 +72,23 @@ public class Terrain {
 					groupX = groupY = groupZ = -1;
 					
 					if (x > 0 && get(x - 1, y, z) == 0)
-						groupX = getInt(groupMap, x - 1, y, z);
+						groupX = regions.getInt(x - 1, y, z);
 					
 					if (y < configuration.height - 1 && get(x, y + 1, z) == 0)
-						groupY = getInt(groupMap, x, y + 1, z);
+						groupY = regions.getInt(x, y + 1, z);
 					
 					if (z > 0 && get(x, y, z - 1) == 0)
-						groupZ = getInt(groupMap, x, y, z - 1);
+						groupZ = regions.getInt(x, y, z - 1);
 
 					minGroup = minPositive(groupX, groupY, groupZ);
 					
 					if (minGroup < 0)
 					{
 						// New group
-						setInt(groupMap, x, y, z, maxGroup++);
+						regions.setInt(x, y, z, maxGroup++);
 					} else {
 						// Existing group. Make sure adjacent groups are joined.
-						setInt(groupMap, x, y, z, minGroup);
+						regions.setInt(x, y, z, minGroup);
 						if (groupX >= 0 && groupX != minGroup)
 							equivalencyMatrix[minGroup][groupX] = true;
 						if (groupY >= 0 && groupY != minGroup)
@@ -105,10 +107,10 @@ public class Terrain {
 		for (int groupN = 1; groupN <= maxGroup; groupN++)
 			equivalencyMatrix[0][groupN] |= equivalencyMatrix[groupN][0];
 		
-		for (int x = 0; x < width; x++)
-			for (int z = 0; z < depth; z++)
+		for (int x = 0; x < configuration.width; x++)
+			for (int z = 0; z < configuration.depth; z++)
 				for (int y = 0; y < configuration.height; y++)
-					if (get(x, y, z) == 0 && !(equivalencyMatrix[0][getInt(groupMap, x, y, z)]))
+					if (get(x, y, z) == 0 && !(equivalencyMatrix[0][regions.getInt(x, y, z)]))
 						set(x, y, z, 1);
 	}
 	
@@ -133,8 +135,8 @@ public class Terrain {
 	
 	private void calculateLights() {
 		for (int y = configuration.height - 1; y >= 0; y--) {
-			for (int x = 0; x < width; x++) {
-				for (int z = 0; z < depth; z++) {
+			for (int x = 0; x < configuration.width; x++) {
+				for (int z = 0; z < configuration.depth; z++) {
 					if (y == configuration.height - 1)
 						setLight(x, y, z, 1);
 					else {
@@ -152,47 +154,38 @@ public class Terrain {
 	}
 
 	public int get(int x, int y, int z) {
-		if (y >= configuration.height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
+		if (y >= configuration.height || y < 0 || x >= configuration.width || x < 0 || z >= configuration.depth || z < 0)
 			return 0;
 
-		return voxelData[y * width * depth + z * width + x];
+		return voxelData[y * configuration.width * configuration.depth + z * configuration.width + x];
 	}
 
 	private void set(int x, int y, int z, int val) {
-		if (y >= configuration.height || y < 0 || x >= width || x < 0 || z >= depth || z < 0)
+		if (y >= configuration.height || y < 0 || x >= configuration.width || x < 0 || z >= configuration.depth || z < 0)
 			return;
 		
-		voxelData[y * width * depth + z * width + x] = val;
+		voxelData[y * configuration.width * configuration.depth + z * configuration.width + x] = val;
 	}
 
 	public float getLight(int x, int y, int z) {
 
-		if (y >= configuration.height || x >= width || x < 0 || z >= depth || z < 0)
+		if (y >= configuration.height || x >= configuration.width || x < 0 || z >= configuration.depth || z < 0)
 			return 1;
 		
 		if (y < 0)
 			return getLight(x, 0, z);
 		
-		return lightData[y * width * depth + z * width + x];
+		return lightData[y * configuration.width * configuration.depth + z * configuration.width + x];
 	}
 	
 	private void setLight(int x, int y, int z, float val) {
-		lightData[y * width * depth + z * width + x] = val;
+		lightData[y * configuration.width * configuration.depth + z * configuration.width + x] = val;
 	}
 
-	private int getInt(int[] vals, int x, int y, int z) {
-		return vals[y * width * depth + z * width + x];
-	}
-
-	private void setInt(int[] vals, int x, int y, int z, int val) {
-		vals[y * width * depth + z * width + x] = val;
-	}
-
-	private Random rng;
 	private void addTrees() {
 		rng = new Random((int) configuration.seed);
-		for (int i = 0; i < width / 2; i++)
-			addTree((int) (rng.nextFloat() * width), (int) (rng.nextFloat() * depth));
+		for (int i = 0; i < configuration.width / 2; i++)
+			addTree((int) (rng.nextFloat() * configuration.width), (int) (rng.nextFloat() * configuration.depth));
 	}
 
 	private void addTree(int x, int z) {		
@@ -234,6 +227,8 @@ public class Terrain {
 		configuration.caveScale = Math.random() * 7 + 3;
 		configuration.caveStretch = Math.random() + .5;
 		configuration.height = (int) (Math.random() * 64.0 + 32);
+		configuration.width = 320;
+		configuration.depth = 320;
 	}
 
 	public void configure(TerrainConfig config) {

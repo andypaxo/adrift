@@ -48,7 +48,7 @@ public class Stage implements ClientListener {
 					entity.velocity.y = 0;
 				}
 			}
-			if (entity.velocity.z != 0) {
+			if (entity.velocity.z != 0) {	
 				entity.position.z += scratch.z;
 				if (collisionWithTerrain(entity)) {
 					entity.position.z = resolve(entity.position.z, scratch.z, entity.size.z); // Back out
@@ -56,6 +56,10 @@ public class Stage implements ClientListener {
 				}
 			}
 		}
+		
+		
+		int playerRegion = terrain.regions.getInt((int) player.position.x, (int) player.position.y, (int) player.position.z);
+		Hud.setInfo("Region", "" + playerRegion);
 	}
 
 	private float resolve(float position, float velocity, float size) {

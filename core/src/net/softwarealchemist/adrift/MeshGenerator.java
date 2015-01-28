@@ -13,7 +13,7 @@ import com.badlogic.gdx.math.Vector3;
 public class MeshGenerator {
 	Terrain terrain;
 	public int width, depth, height;
-	private int chunkSize = 32;
+	public static final int chunkSize = 32;
 
 	private int numPolys;
 	private int vertexLength;
@@ -22,8 +22,8 @@ public class MeshGenerator {
 
 	public MeshGenerator(Terrain terrain) {
 		this.terrain = terrain;
-		width = terrain.width;
-		depth = terrain.depth;
+		width = terrain.configuration.width;
+		depth = terrain.configuration.depth;
 		height = terrain.configuration.height;
 
 		vertexLength = VertexAttribute.Position().numComponents
