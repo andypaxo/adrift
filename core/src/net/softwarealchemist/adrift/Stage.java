@@ -41,9 +41,10 @@ public class Stage implements ClientListener {
 			final Relic relic = new Relic();
 			relic.id = getNextId();
 			int location = validLocations.get(i);
+			relic.size.set(.5f, .5f, .5f);
 			relic.position.set(
 				(location % terrain.configuration.width) + .5f,
-				location / (terrain.configuration.width * terrain.configuration.depth),
+				location / (terrain.configuration.width * terrain.configuration.depth) + relic.size.y / 2f,
 				((location / terrain.configuration.width) % terrain.configuration.depth) + .5f
 			);
 			relic.name = "*";

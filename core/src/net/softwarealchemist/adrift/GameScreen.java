@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
+import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.network.AdriftClient;
 import net.softwarealchemist.network.AdriftServer;
 import net.softwarealchemist.network.Broadcaster;
@@ -32,6 +33,8 @@ public class GameScreen implements Screen {
 	private ModelInstance terrainModelInstance;
 	private Model playerIndicatorModel;
 	private ModelInstance playerIndicatorModelInstance;
+	private Model relicModel;
+	private ModelInstance relicModelInstance;
 	private ModelBatch modelBatch;
 	private PerspectiveCamera cam;
 	private float time = 0;
@@ -138,8 +141,12 @@ public class GameScreen implements Screen {
 		player.id = stage.getNextId();
 		
 		final ModelBuilder modelBuilder = new ModelBuilder();
+		
 		playerIndicatorModel = modelBuilder.createBox(player.size.x, player.size.y, player.size.z, new Material(ColorAttribute.createDiffuse(1, .2f, .2f, 1)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		playerIndicatorModelInstance = new ModelInstance(playerIndicatorModel);
+		
+		relicModel = modelBuilder.createCone(.75f, .75f, .5f, 3, new Material(ColorAttribute.createDiffuse(1, 1, .2f, 1)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+		relicModelInstance = new ModelInstance(relicModel);
 	}
 
 	private long lastFpsCountTime;
@@ -178,11 +185,15 @@ public class GameScreen implements Screen {
 			for (Entity entity : stage.entities.values()) {
 				//only draw local player if (GameState.InteractionMode == GameState.MODE_SPECTATE) { }
 				synchronized (stage) {
-//					playerIndicatorModelInstance.transform.setToWorld(entity.position, entity.rotation, Vector3.Y);
-					playerIndicatorModelInstance.transform.setToTranslation(entity.position);
-					playerIndicatorModelInstance.transform.rotate(Vector3.Y, entity.rotation.y);
-					modelBatch.render(playerIndicatorModelInstance, environment);
-					if ((entity != player || GameState.InteractionMode == GameState.MODE_SPECTATE) && cam.frustum.pointInFrustum(entity.position)) {
+					ModelInstance modelToRender = playerIndicatorModelInstance;
+					if (entity instanceof Relic)
+						modelToRender = relicModelInstance;
+					
+					modelToRender.transform.setToTranslation(entity.position);
+					modelToRender.transform.rotate(Vector3.Y, entity.rotation.y);
+					
+					modelBatch.render(modelToRender, environment);
+					if (entity instanceof PlayerCharacter && (entity != player || GameState.InteractionMode == GameState.MODE_SPECTATE) && cam.frustum.pointInFrustum(entity.position)) {
 						final Vector3 labelPos = cam.project(new Vector3(entity.position));
 						labels.add(new Label2d(labelPos, entity.name));
 					}
@@ -243,6 +254,7 @@ public class GameScreen implements Screen {
 		modelBatch.dispose();
 		terrainModel.dispose();
 		playerIndicatorModel.dispose();
+		relicModel.dispose();
 		for (Mesh waterMesh : waterMeshes)
 			waterMesh.dispose();
 		waterShader.dispose();

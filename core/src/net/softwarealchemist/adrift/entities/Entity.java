@@ -14,6 +14,7 @@ public abstract class Entity implements Serializable {
 	public float gravityMultiplier;
 	public int id;
 	public String name;
+	public boolean canBeCollected;
 
 	public Entity() {
 		rotation = new Vector3();
