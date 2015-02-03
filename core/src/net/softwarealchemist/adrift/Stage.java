@@ -1,9 +1,11 @@
 package net.softwarealchemist.adrift;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.Entity;
+import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.network.ClientListener;
 
@@ -16,6 +18,7 @@ public class Stage implements ClientListener {
 	private GameScreen gameScreen;
 	private int highestId;
 	private Entity player;
+	private int relicCount;
 	
 	public Stage(Terrain terrain, GameScreen gameScreen) {
 		this.terrain = terrain;
@@ -36,22 +39,21 @@ public class Stage implements ClientListener {
 		
 		System.out.println(String.format("Found %d valid relic locations", validLocations.size));
 		validLocations.shuffle();
-		int i;
-		for (i = 0; i < terrain.configuration.width / 2; i++) {
+		for (relicCount = 0; relicCount < terrain.configuration.width * .1; relicCount++) {
 			final Relic relic = new Relic();
 			relic.id = getNextId();
-			int location = validLocations.get(i);
-			relic.size.set(.5f, .5f, .5f);
+			int location = validLocations.get(relicCount);
+			relic.size.set(.75f, .75f, .75f);
 			relic.position.set(
 				(location % terrain.configuration.width) + .5f,
 				location / (terrain.configuration.width * terrain.configuration.depth) + relic.size.y / 2f,
 				((location / terrain.configuration.width) % terrain.configuration.depth) + .5f
 			);
-			relic.name = "*";
+			relic.name = "Relic " + relicCount;
 			addEntity(relic);
 		}
 
-		System.out.println(String.format("%d relics added in %.1f seconds", i, (System.nanoTime() - startTime) / 1000000000.0));
+		System.out.println(String.format("%d relics added in %.1f seconds", relicCount, (System.nanoTime() - startTime) / 1000000000.0));
 	}
 	
 	public void addEntity(Entity entity) {
@@ -88,10 +90,33 @@ public class Stage implements ClientListener {
 				}
 			}
 		}
-		
-		
+
 		int playerRegion = terrain.regions.getInt((int) player.position.x, (int) player.position.y, (int) player.position.z);
 		Hud.setInfo("Region", "" + playerRegion);
+	}
+	
+	public void doEvents() {
+		final ArrayList<Entity> entitiesToRemove = new ArrayList<Entity>();
+		
+		for (Entity entity : entities.values()) {
+			// This could get really tangled. 
+			// Might be a good idea for entities to have a way of hooking in their own event code
+			
+			if (entity instanceof PlayerCharacter) {
+				for (Entity other : entities.values())
+					if (other.canBeCollected && !other.flaggedForRemoval && entity.intersectsWith(other)) {
+						other.flaggedForRemoval = true;
+						entitiesToRemove.add(other);
+						relicCount--;
+						Hud.log("Item collected : " + other.name);
+					}
+			}
+		}
+
+		Hud.setInfo("Relics remaining", ""+relicCount);
+		
+		for (Entity dead : entitiesToRemove)
+			entities.remove(dead.getKey());
 	}
 
 	private float resolve(float position, float velocity, float size) {

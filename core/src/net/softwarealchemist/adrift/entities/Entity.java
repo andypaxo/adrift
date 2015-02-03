@@ -15,6 +15,7 @@ public abstract class Entity implements Serializable {
 	public int id;
 	public String name;
 	public boolean canBeCollected;
+	public boolean flaggedForRemoval;
 
 	public Entity() {
 		rotation = new Vector3();
@@ -35,6 +36,20 @@ public abstract class Entity implements Serializable {
 		size.set(entity.size);
 		id = entity.id;
 		name = entity.name;
+	}
+
+	public boolean intersectsWith(Entity other) {
+
+		float lx = Math.abs(this.position.x - other.position.x);
+		float sumx = (this.size.x / 2f) + (other.size.x / 2f);
+
+		float ly = Math.abs(this.position.y - other.position.y);
+		float sumy = (this.size.y / 2f) + (other.size.y / 2f);
+
+		float lz = Math.abs(this.position.z - other.position.z);
+		float sumz = (this.size.z / 2f) + (other.size.z / 2f);
+
+		return (lx <= sumx && ly <= sumy && lz <= sumz);
 	}
 	
 }
