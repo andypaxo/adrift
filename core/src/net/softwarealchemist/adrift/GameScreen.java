@@ -93,6 +93,7 @@ public class GameScreen implements Screen {
 	private void createTerrain() {
 		terrain.generate();
 		terrainGenerationComplete = true;
+		stage.generateRelics();
 	}
 	
 	private void createMeshes() {

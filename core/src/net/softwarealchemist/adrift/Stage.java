@@ -4,9 +4,11 @@ import java.util.HashMap;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.Entity;
+import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.network.ClientListener;
 
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.IntArray;
 
 public class Stage implements ClientListener {
 	Terrain terrain;
@@ -19,6 +21,36 @@ public class Stage implements ClientListener {
 		this.terrain = terrain;
 		this.gameScreen = gameScreen;
 		entities = new HashMap<Integer, Entity>();
+	}
+	
+	public void generateRelics () {
+		long startTime = System.nanoTime();
+
+		final IntArray validLocations = new IntArray();
+
+		for (int x = 0; x < terrain.configuration.width; x++)
+			for (int z = 0; z < terrain.configuration.depth; z++)
+				for (int y = 2; y < terrain.configuration.height; y++)
+					if ((x+y+z) % 13 == 0 && terrain.get(x, y, z) == 0 && terrain.get(x, y - 1, z) > 0)
+						validLocations.add(y * terrain.configuration.width * terrain.configuration.depth + z * terrain.configuration.width + x);
+		
+		System.out.println(String.format("Found %d valid relic locations", validLocations.size));
+		validLocations.shuffle();
+		int i;
+		for (i = 0; i < terrain.configuration.width / 2; i++) {
+			final Relic relic = new Relic();
+			relic.id = getNextId();
+			int location = validLocations.get(i);
+			relic.position.set(
+				(location % terrain.configuration.width) + .5f,
+				location / (terrain.configuration.width * terrain.configuration.depth),
+				((location / terrain.configuration.width) % terrain.configuration.depth) + .5f
+			);
+			relic.name = "*";
+			addEntity(relic);
+		}
+
+		System.out.println(String.format("%d relics added in %.1f seconds", i, (System.nanoTime() - startTime) / 1000000000.0));
 	}
 	
 	public void addEntity(Entity entity) {
