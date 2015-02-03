@@ -27,10 +27,8 @@ public class Stage implements ClientListener {
 	
 	public void step(float timeStep) {
 		Vector3 scratch = new Vector3();
-		for (Entity entity : entities.values()) {			
-			// TODO : Special gravity handling should be per entity
-			if (GameState.InteractionMode == GameState.MODE_WALK)
-				entity.velocity.y -= 40 * timeStep;
+		for (Entity entity : entities.values()) {
+			entity.velocity.y -= 40 * timeStep * entity.gravityMultiplier;
 			
 			scratch.set(entity.velocity).scl(timeStep);
 			

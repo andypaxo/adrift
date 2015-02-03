@@ -11,6 +11,7 @@ public abstract class Entity implements Serializable {
 	public Vector3 position;
 	public Vector3 velocity;
 	public Vector3 size;
+	public float gravityMultiplier;
 	public int id;
 	public String name;
 
@@ -29,6 +30,7 @@ public abstract class Entity implements Serializable {
 		rotation.set(entity.rotation);
 		position.set(entity.position);
 		velocity.set(entity.velocity);
+		gravityMultiplier = entity.gravityMultiplier;
 		size.set(entity.size);
 		id = entity.id;
 		name = entity.name;

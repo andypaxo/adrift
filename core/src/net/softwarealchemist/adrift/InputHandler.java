@@ -69,6 +69,7 @@ public class InputHandler {
 			player.velocity.y += vertical * 15;
 		else
 			player.velocity.y = previousYMovement;
+		player.gravityMultiplier = 1;
 	}
 
 	private void doFly() {
@@ -93,6 +94,7 @@ public class InputHandler {
 		player.velocity.rotate(Vector3.Y, player.rotation.y);
 		player.velocity.y += vertical;
 		player.velocity.nor().scl(20);
+		player.gravityMultiplier = 0;
 	}
 
 }
