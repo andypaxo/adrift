@@ -6,12 +6,12 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import net.softwarealchemist.adrift.Entity;
 import net.softwarealchemist.adrift.Hud;
 import net.softwarealchemist.adrift.Stage;
 import net.softwarealchemist.adrift.dto.ClientSetup;
 import net.softwarealchemist.adrift.dto.StateUpdate;
 import net.softwarealchemist.adrift.dto.TerrainConfig;
+import net.softwarealchemist.adrift.entities.Entity;
 
 public class ServerToClientConnection {
 	private TerrainConfig configuration;

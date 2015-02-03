@@ -8,10 +8,10 @@ import java.util.ArrayList;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import net.softwarealchemist.adrift.Entity;
 import net.softwarealchemist.adrift.Hud;
 import net.softwarealchemist.adrift.dto.ClientSetup;
 import net.softwarealchemist.adrift.dto.StateUpdate;
+import net.softwarealchemist.adrift.entities.Entity;
 
 public class AdriftClient {
 

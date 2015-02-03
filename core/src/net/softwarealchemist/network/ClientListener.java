@@ -1,7 +1,7 @@
 package net.softwarealchemist.network;
 
-import net.softwarealchemist.adrift.Entity;
 import net.softwarealchemist.adrift.dto.TerrainConfig;
+import net.softwarealchemist.adrift.entities.Entity;
 
 public interface ClientListener {
 	public void configurationReceived(TerrainConfig configuration);

@@ -3,6 +3,8 @@ package net.softwarealchemist.adrift;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.softwarealchemist.adrift.entities.Entity;
+import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.network.AdriftClient;
 import net.softwarealchemist.network.AdriftServer;
 import net.softwarealchemist.network.Broadcaster;
@@ -127,8 +129,9 @@ public class GameScreen implements Screen {
 	}
 
 	private void createPlayer() {
-		player = new Entity();
+		player = new PlayerCharacter();
 		player.position.set(120, 0, 0);
+		player.rotation.set(0, 45, 0);
 		player.size.set(.8f, .99f, .8f);
 		player.name = System.getProperty("user.name");
 		player.id = stage.getNextId();

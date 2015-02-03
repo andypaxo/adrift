@@ -1,10 +1,10 @@
-package net.softwarealchemist.adrift;
+package net.softwarealchemist.adrift.entities;
 
 import java.io.Serializable;
 
 import com.badlogic.gdx.math.Vector3;
 
-public class Entity implements Serializable {
+public abstract class Entity implements Serializable {
 	private static final long serialVersionUID = 8903359267394617157L;
 	
 	public Vector3 rotation;

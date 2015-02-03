@@ -3,6 +3,7 @@ package net.softwarealchemist.adrift;
 import java.util.HashMap;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
+import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.network.ClientListener;
 
 import com.badlogic.gdx.math.Vector3;
