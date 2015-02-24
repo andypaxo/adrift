@@ -2,9 +2,11 @@ package net.softwarealchemist.adrift;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.Entity;
+import net.softwarealchemist.adrift.entities.Particle;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.network.ClientListener;
@@ -72,23 +74,25 @@ public class Stage implements ClientListener {
 				entity.position.x += scratch.x;
 				if (collisionWithTerrain(entity)) {
 					entity.position.x = resolve(entity.position.x, scratch.x, entity.size.x); // Back out
-					entity.velocity.x = 0;
+					entity.velocity.x = entity.velocity.x * (-entity.bounciness);
 				}
 			}
 			if (entity.velocity.y != 0) {
 				entity.position.y += scratch.y;
 				if (entity.position.y < entity.size.y * .5f || collisionWithTerrain(entity)) {
 					entity.position.y = resolve(entity.position.y, scratch.y, entity.size.y); // Back out
-					entity.velocity.y = 0;
+					entity.velocity.y = entity.velocity.y * (-entity.bounciness);
 				}
 			}
 			if (entity.velocity.z != 0) {	
 				entity.position.z += scratch.z;
 				if (collisionWithTerrain(entity)) {
 					entity.position.z = resolve(entity.position.z, scratch.z, entity.size.z); // Back out
-					entity.velocity.z = 0;
+					entity.velocity.z = entity.velocity.z * (-entity.bounciness);
 				}
 			}
+
+			entity.step(timeStep);
 		}
 
 		int playerRegion = terrain.regions.getInt((int) player.position.x, (int) player.position.y, (int) player.position.z);
@@ -96,8 +100,7 @@ public class Stage implements ClientListener {
 	}
 	
 	public void doEvents() {
-		final ArrayList<Entity> entitiesToRemove = new ArrayList<Entity>();
-		
+		ArrayList<Entity> entitiesToAdd = new ArrayList<Entity>();
 		for (Entity entity : entities.values()) {
 			// This could get really tangled. 
 			// Might be a good idea for entities to have a way of hooking in their own event code
@@ -106,17 +109,42 @@ public class Stage implements ClientListener {
 				for (Entity other : entities.values())
 					if (other.canBeCollected && !other.flaggedForRemoval && entity.intersectsWith(other)) {
 						other.flaggedForRemoval = true;
-						entitiesToRemove.add(other);
 						relicCount--;
 						Hud.log("Item collected : " + other.name);
+						for (int i = 0; i < 15; i++)
+							entitiesToAdd.add(makeParticle(other.position));
 					}
 			}
 		}
+		
+		for (Entity entity : entitiesToAdd)
+			addEntity(entity);
 
 		Hud.setInfo("Relics remaining", ""+relicCount);
 		
-		for (Entity dead : entitiesToRemove)
-			entities.remove(dead.getKey());
+		Iterator<Entity> entityIterator = entities.values().iterator();
+		while (entityIterator.hasNext()) {
+			if(entityIterator.next().flaggedForRemoval)
+				entityIterator.remove();
+		}
+
+//		ArrayList<Entity> entitiesToRemove = new ArrayList<Entity>();
+//		for (Entity entity : entities.values())
+//			if (entity.flaggedForRemoval)
+//				entitiesToRemove.add(entity);
+//		for (Entity entity : entitiesToRemove)
+//			entities.remove(entity.id);
+	}
+
+	private Entity makeParticle(Vector3 position) {
+		Particle result = new Particle();
+		result.id = getNextId();
+		result.position.set(position);
+		result.velocity.set(
+				(float)(Math.random() * 4 - 2),
+				(float)(Math.random() * 15),
+				(float)(Math.random() * 4 - 2));
+		return result;
 	}
 
 	private float resolve(float position, float velocity, float size) {

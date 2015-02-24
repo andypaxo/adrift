@@ -12,6 +12,7 @@ public abstract class Entity implements Serializable {
 	public Vector3 velocity;
 	public Vector3 size;
 	public float gravityMultiplier;
+	public float bounciness;
 	public int id;
 	public String name;
 	public boolean canBeCollected;
@@ -52,4 +53,7 @@ public abstract class Entity implements Serializable {
 		return (lx <= sumx && ly <= sumy && lz <= sumz);
 	}
 	
+	public void step(float delta) {
+		
+	}
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.softwarealchemist.adrift.entities.Entity;
+import net.softwarealchemist.adrift.entities.Particle;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.network.AdriftClient;
@@ -35,6 +36,8 @@ public class GameScreen implements Screen {
 	private ModelInstance playerIndicatorModelInstance;
 	private Model relicModel;
 	private ModelInstance relicModelInstance;
+	private Model particleModel;
+	private ModelInstance particleModelInstance;
 	private ModelBatch modelBatch;
 	private PerspectiveCamera cam;
 	private float time = 0;
@@ -147,6 +150,9 @@ public class GameScreen implements Screen {
 		
 		relicModel = modelBuilder.createBox(.75f, 1.25f, .75f, new Material(ColorAttribute.createDiffuse(1, 1, .2f, 1)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		relicModelInstance = new ModelInstance(relicModel);
+		
+		particleModel = modelBuilder.createBox(.1f, .1f, .1f, new Material(ColorAttribute.createDiffuse(1, 1, .2f, 1)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+		particleModelInstance = new ModelInstance(particleModel);
 	}
 
 	private long lastFpsCountTime;
@@ -190,6 +196,8 @@ public class GameScreen implements Screen {
 					ModelInstance modelToRender = playerIndicatorModelInstance;
 					if (entity instanceof Relic)
 						modelToRender = relicModelInstance;
+					else if (entity instanceof Particle)
+						modelToRender = particleModelInstance;
 					
 					modelToRender.transform.setToTranslation(entity.position);
 					modelToRender.transform.rotate(Vector3.Y, entity.rotation.y);
@@ -257,6 +265,7 @@ public class GameScreen implements Screen {
 		terrainModel.dispose();
 		playerIndicatorModel.dispose();
 		relicModel.dispose();
+		particleModel.dispose();
 		for (Mesh waterMesh : waterMeshes)
 			waterMesh.dispose();
 		waterShader.dispose();
