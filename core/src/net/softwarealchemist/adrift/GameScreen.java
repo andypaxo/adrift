@@ -145,7 +145,7 @@ public class GameScreen implements Screen {
 		playerIndicatorModel = modelBuilder.createBox(player.size.x, player.size.y, player.size.z, new Material(ColorAttribute.createDiffuse(1, .2f, .2f, 1)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		playerIndicatorModelInstance = new ModelInstance(playerIndicatorModel);
 		
-		relicModel = modelBuilder.createCone(.75f, .75f, .75f, 3, new Material(ColorAttribute.createDiffuse(1, 1, .2f, 1)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+		relicModel = modelBuilder.createBox(.75f, 1.25f, .75f, new Material(ColorAttribute.createDiffuse(1, 1, .2f, 1)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		relicModelInstance = new ModelInstance(relicModel);
 	}
 
