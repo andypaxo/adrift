@@ -9,11 +9,13 @@ import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.entities.Particle;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
+import net.softwarealchemist.network.AdriftClient;
+import net.softwarealchemist.network.AdriftServer;
+import net.softwarealchemist.network.Broadcaster;
 import net.softwarealchemist.network.ClientListener;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntArray;
 
@@ -24,6 +26,11 @@ public class Stage implements ClientListener {
 	private int highestId;
 	private Entity player;
 	private int relicCount;
+	
+	private AdriftClient client;
+	private AdriftServer server;
+	private Broadcaster broadcaster;
+	
 	// Wrong, wrong, wrong
 	private Sound bling;
 	
@@ -32,6 +39,23 @@ public class Stage implements ClientListener {
 		this.gameScreen = gameScreen;
 		entities = new HashMap<Integer, Entity>();
 		bling = Gdx.audio.newSound(Gdx.files.internal("sounds/bling.wav"));
+	}
+
+
+	public void startWithLocalServer() {
+		terrain.configureRandom();
+		server = new AdriftServer();
+		server.setConfiguration(terrain.getConfiguration());
+		server.setStage(this);
+		server.start();
+		broadcaster = new Broadcaster();
+		broadcaster.start();
+		gameScreen.startTerrainGeneration(); // TODO : This should always be initiated by client
+	}
+	
+	public void startWithRemoteServer() {
+		client = new AdriftClient(GameState.server, this);
+		client.start();
 	}
 	
 	public void generateRelics () {
@@ -134,13 +158,6 @@ public class Stage implements ClientListener {
 			if(entityIterator.next().flaggedForRemoval)
 				entityIterator.remove();
 		}
-
-//		ArrayList<Entity> entitiesToRemove = new ArrayList<Entity>();
-//		for (Entity entity : entities.values())
-//			if (entity.flaggedForRemoval)
-//				entitiesToRemove.add(entity);
-//		for (Entity entity : entitiesToRemove)
-//			entities.remove(entity.id);
 	}
 
 	private Entity makeParticle(Vector3 position) {
@@ -207,5 +224,14 @@ public class Stage implements ClientListener {
 			addEntity(entity);
 			Hud.log(entity.name + " has joined the party");
 		}
+	}
+
+	public void dispose() {
+		if (server != null)
+			server.dispose();
+		if (client != null)
+			client.dispose();
+		broadcaster.dispose();
+		bling.dispose();
 	}
 }

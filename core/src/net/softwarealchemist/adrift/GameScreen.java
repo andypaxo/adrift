@@ -7,9 +7,6 @@ import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.entities.Particle;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
-import net.softwarealchemist.network.AdriftClient;
-import net.softwarealchemist.network.AdriftServer;
-import net.softwarealchemist.network.Broadcaster;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -47,9 +44,6 @@ public class GameScreen implements Screen {
 	private InputHandler inputHandler;
 	private Stage stage;
 	private Hud hud;
-	private Broadcaster broadcaster;
-	private AdriftClient client;
-	private AdriftServer server;
 	private boolean terrainGenerationComplete;
 	private List<Mesh> waterMeshes;
 	private ShaderProgram waterShader;
@@ -73,22 +67,12 @@ public class GameScreen implements Screen {
 		hud = new Hud();
 		
 		time = 0;
-
-		if (GameState.server == null) {
-			terrain.configureRandom();
-			server = new AdriftServer();
-			server.setConfiguration(terrain.getConfiguration());
-			server.setStage(stage);
-			server.start();
-			broadcaster = new Broadcaster();
-			broadcaster.start();
-			startTerrainGeneration();
-		}
+		
+		if (GameState.server == null)
+			stage.startWithLocalServer();
 		else
-		{
-			client = new AdriftClient(GameState.server, stage);
-			client.start();
-		}
+			stage.startWithRemoteServer();
+		
 		System.out.println("Game screen initialized");
 	}
 	
@@ -269,11 +253,7 @@ public class GameScreen implements Screen {
 		for (Mesh waterMesh : waterMeshes)
 			waterMesh.dispose();
 		waterShader.dispose();
-		broadcaster.dispose();
-		if (server != null)
-			server.dispose();
-		if (client != null)
-			client.dispose();
+		stage.dispose();
 	}
 
 	@Override
