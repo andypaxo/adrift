@@ -11,6 +11,9 @@ import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.network.ClientListener;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntArray;
 
@@ -21,11 +24,14 @@ public class Stage implements ClientListener {
 	private int highestId;
 	private Entity player;
 	private int relicCount;
+	// Wrong, wrong, wrong
+	private Sound bling;
 	
 	public Stage(Terrain terrain, GameScreen gameScreen) {
 		this.terrain = terrain;
 		this.gameScreen = gameScreen;
 		entities = new HashMap<Integer, Entity>();
+		bling = Gdx.audio.newSound(Gdx.files.internal("sounds/bling.wav"));
 	}
 	
 	public void generateRelics () {
@@ -113,6 +119,7 @@ public class Stage implements ClientListener {
 						Hud.log("Item collected : " + other.name);
 						for (int i = 0; i < 15; i++)
 							entitiesToAdd.add(makeParticle(other.position));
+						bling.play();
 					}
 			}
 		}
