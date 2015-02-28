@@ -50,7 +50,6 @@ public class Stage implements ClientListener {
 		server.start();
 		broadcaster = new Broadcaster();
 		broadcaster.start();
-		gameScreen.startTerrainGeneration(); // TODO : This should always be initiated by client
 	}
 	
 	public void startWithRemoteServer() {
@@ -58,6 +57,7 @@ public class Stage implements ClientListener {
 		client.start();
 	}
 	
+	// TODO : This should only be called by server
 	public void generateRelics () {
 		long startTime = System.nanoTime();
 

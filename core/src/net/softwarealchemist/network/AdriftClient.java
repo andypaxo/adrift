@@ -1,84 +1,59 @@
 package net.softwarealchemist.network;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.InetAddress;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import net.softwarealchemist.adrift.Hud;
 import net.softwarealchemist.adrift.dto.ClientSetup;
 import net.softwarealchemist.adrift.dto.StateUpdate;
 import net.softwarealchemist.adrift.entities.Entity;
 
 public class AdriftClient {
 
-	private InetAddress server;
 	private ClientListener listener;
-	private boolean isDisposed;
 	private ScheduledThreadPoolExecutor scheduler;
-	private Socket socket;
-	private ObjectOutputStream output;
+	private ClientConnection connection;
 
-	public AdriftClient(InetAddress server, ClientListener listener) {
-		this.server = server;
+	public AdriftClient(ClientConnection connection, ClientListener listener) {
+		this.connection = connection;
 		this.listener = listener;
 	}
 
 	public void start() {
-		new Thread(() -> receive()).start();
+		new Thread(() -> connection.open()).start();
 		scheduler = new ScheduledThreadPoolExecutor(1);
 		scheduler.scheduleAtFixedRate(() -> send(), 500, 500, TimeUnit.MILLISECONDS); 
 	}
 	
-	private void receive() {		
-		try {
-			socket = new Socket(server, 10537);
-			ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-			output = new ObjectOutputStream(socket.getOutputStream());
-			
-			Object received;
-			while (!isDisposed) {
-				received = inputStream.readObject();
-				if (received instanceof ClientSetup) {
-					final ClientSetup clientSetup = (ClientSetup) received;
-					listener.configurationReceived(clientSetup.terrainConfig);
-					listener.setPlayerId(clientSetup.playerId);
-				} else if (received instanceof StateUpdate) {
-					Entity localPlayer = listener.getPlayer();
-					for (Entity entity : ((StateUpdate) received).getUpdatedEntities()) {
-						if (entity.id != localPlayer.id)
-							listener.updateEntity(entity);
-					}
-				}
+	public void objectReceived(Object received)
+	{
+		if (received instanceof ClientSetup) {
+			final ClientSetup clientSetup = (ClientSetup) received;
+			listener.configurationReceived(clientSetup.terrainConfig);
+			listener.setPlayerId(clientSetup.playerId);
+		} else if (received instanceof StateUpdate) {
+			Entity localPlayer = listener.getPlayer();
+			for (Entity entity : ((StateUpdate) received).getUpdatedEntities()) {
+				if (entity.id != localPlayer.id)
+					listener.updateEntity(entity);
 			}
-			
-			output.close();
-			inputStream.close();
-			socket.close();
-		} catch (Exception e) {
-			Hud.log("Host disconnected. You're on your own now!");
-			scheduler.shutdown();
 		}
 	}
 	
-	private void send() {	
-		try {
-			Entity localPlayer = listener.getPlayer();
-			ArrayList<Entity> updatedEntities = new ArrayList<Entity>();
-			updatedEntities.add(localPlayer);
-			output.writeObject(new StateUpdate(updatedEntities));
-			output.reset();
-		} catch (Exception e) {
-			Hud.log("Communication problem : " + e.getMessage());
-		}
+	private void send() {
+		Entity localPlayer = listener.getPlayer();
+		ArrayList<Entity> updatedEntities = new ArrayList<Entity>();
+		updatedEntities.add(localPlayer);
+		connection.send(new StateUpdate(updatedEntities));
 	}
 
 	public void dispose() {
-		isDisposed = true;
+		connection.dispose();
 		scheduler.shutdown();
+	}
+
+	public void stop() {
+		dispose();
 	}
 
 }
