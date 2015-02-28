@@ -17,6 +17,7 @@ public class AdriftClient {
 	public AdriftClient(ClientConnection connection, ClientListener listener) {
 		this.connection = connection;
 		this.listener = listener;
+		connection.setClient(this);
 	}
 
 	public void start() {

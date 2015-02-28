@@ -37,14 +37,18 @@ public class AdriftServer {
 			while (true) {
 				Socket socket = serverSocket.accept();
 				// TODO These objects really need to be cleaned up on shutdown
-				ServerToClientConnection connection = new ServerToClientConnection(socket, stage, configuration);
-				new Thread(() -> connection.listen()).start();
-				scheduler.scheduleAtFixedRate(() -> connection.send(), 500, 500, TimeUnit.MILLISECONDS); 
+				ServerConnection connection = new ServerToClientConnection(socket, stage, configuration);
+				addClient(connection); 
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			Gdx.app.exit();
 		}
+	}
+
+	public void addClient(ServerConnection connection) {
+		new Thread(() -> connection.listen()).start();
+		scheduler.scheduleAtFixedRate(() -> connection.send(), 500, 500, TimeUnit.MILLISECONDS);
 	}
 
 	public void dispose() {

@@ -13,6 +13,9 @@ import net.softwarealchemist.network.AdriftClient;
 import net.softwarealchemist.network.AdriftServer;
 import net.softwarealchemist.network.Broadcaster;
 import net.softwarealchemist.network.ClientListener;
+import net.softwarealchemist.network.ClientToLocalConnection;
+import net.softwarealchemist.network.ClientToSocketConnection;
+import net.softwarealchemist.network.ServerToLocalConnection;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
@@ -48,12 +51,20 @@ public class Stage implements ClientListener {
 		server.setConfiguration(terrain.getConfiguration());
 		server.setStage(this);
 		server.start();
+		
+		final ClientToLocalConnection clientConnection = new ClientToLocalConnection();
+		client = new AdriftClient(clientConnection, this);
+		
+		final ServerToLocalConnection serverConnection = new ServerToLocalConnection(client, this, terrain.getConfiguration());
+		server.addClient(serverConnection);
+				
 		broadcaster = new Broadcaster();
 		broadcaster.start();
 	}
 	
 	public void startWithRemoteServer() {
-		client = new AdriftClient(GameState.server, this);
+		final ClientToSocketConnection clientConnection = new ClientToSocketConnection(GameState.server);
+		client = new AdriftClient(clientConnection, this);
 		client.start();
 	}
 	

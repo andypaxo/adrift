@@ -13,7 +13,7 @@ import net.softwarealchemist.adrift.dto.StateUpdate;
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.Entity;
 
-public class ServerToClientConnection {
+public class ServerToClientConnection implements ServerConnection {
 	private TerrainConfig configuration;
 	private Socket socket;
 	private Stage stage;
