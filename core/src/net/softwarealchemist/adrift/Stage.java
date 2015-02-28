@@ -152,8 +152,8 @@ public class Stage implements ClientListener {
 						other.flaggedForRemoval = true;
 						relicCount--;
 						Hud.log("Item collected : " + other.name);
-						for (int i = 0; i < 15; i++)
-							entitiesToAdd.add(makeParticle(other.position));
+//						for (int i = 0; i < 15; i++)
+//							entitiesToAdd.add(makeParticle(other.position));
 						bling.play();
 					}
 			}
