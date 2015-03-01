@@ -18,11 +18,8 @@ import net.softwarealchemist.network.ClientToLocalConnection;
 import net.softwarealchemist.network.ClientToSocketConnection;
 import net.softwarealchemist.network.ServerToLocalConnection;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntArray;
-import com.badlogic.gdx.utils.Logger;
 
 public class Stage implements ClientListener {
 	Terrain terrain;
@@ -37,15 +34,11 @@ public class Stage implements ClientListener {
 	private AdriftServer server;
 	private Broadcaster broadcaster;
 	
-	// Wrong, wrong, wrong
-	private Sound bling;
-	
 	public Stage(Terrain terrain, GameScreen gameScreen) {
 		this.terrain = terrain;
 		this.gameScreen = gameScreen;
 		entities = new HashMap<Integer, Entity>();
 		localEntities = new ArrayList<Entity>();
-		bling = Gdx.audio.newSound(Gdx.files.internal("sounds/bling.wav"));
 	}
 
 
@@ -155,7 +148,13 @@ public class Stage implements ClientListener {
 	
 	public void doEvents() {
 		ArrayList<Entity> entitiesToAdd = new ArrayList<Entity>();
+		float nearestCollectibleDistance = Float.MAX_VALUE;
 		for (Entity entity : entities.values()) {
+			if (entity.canBeCollected) {
+				float distance = player.position.dst(entity.position);
+				nearestCollectibleDistance = Math.min(distance, nearestCollectibleDistance);
+			}
+			
 			// This could get really tangled. 
 			// Might be a good idea for entities to have a way of hooking in their own event code
 			
@@ -167,11 +166,12 @@ public class Stage implements ClientListener {
 						Hud.log("Item collected : " + other.name);
 						for (int i = 0; i < 15; i++)
 							entitiesToAdd.add(makeParticle(other.position));
-						float volume = entity == player ? 1 : 1f / entity.position.dst(player.position);
-						bling.play(volume);
+						Sounds.itemGet(other);
 					}
 			}
 		}
+		
+		Sounds.setLoopDistance(nearestCollectibleDistance);
 		
 		for (Entity entity : entitiesToAdd)
 			addEntity(entity);
@@ -239,6 +239,7 @@ public class Stage implements ClientListener {
 	public void setPlayer(Entity player) {
 		addEntity(player);
 		this.player = player;
+		Sounds.startup(player);
 	}
 
 	@Override
@@ -261,6 +262,6 @@ public class Stage implements ClientListener {
 		if (client != null)
 			client.dispose();
 		broadcaster.dispose();
-		bling.dispose();
+		Sounds.shutdown();
 	}
 }
