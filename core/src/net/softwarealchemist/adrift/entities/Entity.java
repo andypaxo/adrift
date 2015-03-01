@@ -17,6 +17,7 @@ public abstract class Entity implements Serializable {
 	public String name;
 	public boolean canBeCollected;
 	public boolean flaggedForRemoval;
+	public boolean localOnly;
 
 	public Entity() {
 		rotation = new Vector3();

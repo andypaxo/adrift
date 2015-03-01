@@ -3,6 +3,7 @@ package net.softwarealchemist.adrift;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.Entity;
@@ -25,6 +26,7 @@ import com.badlogic.gdx.utils.IntArray;
 public class Stage implements ClientListener {
 	Terrain terrain;
 	public HashMap<Integer, Entity> entities;
+	public List<Entity> localEntities;
 	private GameScreen gameScreen;
 	private int highestId;
 	private Entity player;
@@ -41,6 +43,7 @@ public class Stage implements ClientListener {
 		this.terrain = terrain;
 		this.gameScreen = gameScreen;
 		entities = new HashMap<Integer, Entity>();
+		localEntities = new ArrayList<Entity>();
 		bling = Gdx.audio.newSound(Gdx.files.internal("sounds/bling.wav"));
 	}
 
@@ -100,44 +103,53 @@ public class Stage implements ClientListener {
 	}
 	
 	public void addEntity(Entity entity) {
-		entities.put(entity.getKey(), entity);
+		if (entity.localOnly)
+			localEntities.add(entity);
+		else
+			entities.put(entity.getKey(), entity);
 	}
 	
 	public void step(float timeStep) {
 		Vector3 scratch = new Vector3();
-		for (Entity entity : entities.values()) {
-			entity.velocity.y -= 40 * timeStep * entity.gravityMultiplier;
-			
-			scratch.set(entity.velocity).scl(timeStep);
-			
-			// Very basic (tunneling prone) collision with terrain
-			if (entity.velocity.x != 0) {
-				entity.position.x += scratch.x;
-				if (collisionWithTerrain(entity)) {
-					entity.position.x = resolve(entity.position.x, scratch.x, entity.size.x); // Back out
-					entity.velocity.x = entity.velocity.x * (-entity.bounciness);
-				}
-			}
-			if (entity.velocity.y != 0) {
-				entity.position.y += scratch.y;
-				if (entity.position.y < entity.size.y * .5f || collisionWithTerrain(entity)) {
-					entity.position.y = resolve(entity.position.y, scratch.y, entity.size.y); // Back out
-					entity.velocity.y = entity.velocity.y * (-entity.bounciness);
-				}
-			}
-			if (entity.velocity.z != 0) {	
-				entity.position.z += scratch.z;
-				if (collisionWithTerrain(entity)) {
-					entity.position.z = resolve(entity.position.z, scratch.z, entity.size.z); // Back out
-					entity.velocity.z = entity.velocity.z * (-entity.bounciness);
-				}
-			}
-
-			entity.step(timeStep);
-		}
+		for (Entity entity : entities.values())
+			stepEntity(timeStep, scratch, entity);
+		for (Entity entity : localEntities)
+			stepEntity(timeStep, scratch, entity);
 
 		int playerRegion = terrain.regions.getInt((int) player.position.x, (int) player.position.y, (int) player.position.z);
 		Hud.setInfo("Region", "" + playerRegion);
+	}
+
+
+	private void stepEntity(float timeStep, Vector3 scratch, Entity entity) {
+		entity.velocity.y -= 40 * timeStep * entity.gravityMultiplier;
+		
+		scratch.set(entity.velocity).scl(timeStep);
+		
+		// Very basic (tunneling prone) collision with terrain
+		if (entity.velocity.x != 0) {
+			entity.position.x += scratch.x;
+			if (collisionWithTerrain(entity)) {
+				entity.position.x = resolve(entity.position.x, scratch.x, entity.size.x); // Back out
+				entity.velocity.x = entity.velocity.x * (-entity.bounciness);
+			}
+		}
+		if (entity.velocity.y != 0) {
+			entity.position.y += scratch.y;
+			if (entity.position.y < entity.size.y * .5f || collisionWithTerrain(entity)) {
+				entity.position.y = resolve(entity.position.y, scratch.y, entity.size.y); // Back out
+				entity.velocity.y = entity.velocity.y * (-entity.bounciness);
+			}
+		}
+		if (entity.velocity.z != 0) {	
+			entity.position.z += scratch.z;
+			if (collisionWithTerrain(entity)) {
+				entity.position.z = resolve(entity.position.z, scratch.z, entity.size.z); // Back out
+				entity.velocity.z = entity.velocity.z * (-entity.bounciness);
+			}
+		}
+
+		entity.step(timeStep);
 	}
 	
 	public void doEvents() {
@@ -152,8 +164,8 @@ public class Stage implements ClientListener {
 						other.flaggedForRemoval = true;
 						relicCount--;
 						Hud.log("Item collected : " + other.name);
-//						for (int i = 0; i < 15; i++)
-//							entitiesToAdd.add(makeParticle(other.position));
+						for (int i = 0; i < 15; i++)
+							entitiesToAdd.add(makeParticle(other.position));
 						bling.play();
 					}
 			}
@@ -163,8 +175,13 @@ public class Stage implements ClientListener {
 			addEntity(entity);
 
 		Hud.setInfo("Relics remaining", ""+relicCount);
-		
-		Iterator<Entity> entityIterator = entities.values().iterator();
+
+		removeFlaggedEntities(entities.values().iterator());
+		removeFlaggedEntities(localEntities.iterator());
+	}
+
+
+	private void removeFlaggedEntities(Iterator<Entity> entityIterator) {
 		while (entityIterator.hasNext()) {
 			if(entityIterator.next().flaggedForRemoval)
 				entityIterator.remove();
@@ -173,7 +190,6 @@ public class Stage implements ClientListener {
 
 	private Entity makeParticle(Vector3 position) {
 		Particle result = new Particle();
-		result.id = getNextId();
 		result.position.set(position);
 		result.velocity.set(
 				(float)(Math.random() * 4 - 2),

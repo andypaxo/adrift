@@ -174,25 +174,11 @@ public class GameScreen implements Screen {
 			modelBatch.begin(cam);
 			modelBatch.render(terrainModelInstance, environment);
 			// TODO Might be able to do this in a single call
-			for (Entity entity : stage.entities.values()) {
-				//only draw local player if (GameState.InteractionMode == GameState.MODE_SPECTATE) { }
-				synchronized (stage) {
-					ModelInstance modelToRender = playerIndicatorModelInstance;
-					if (entity instanceof Relic)
-						modelToRender = relicModelInstance;
-					else if (entity instanceof Particle)
-						modelToRender = particleModelInstance;
-					
-					modelToRender.transform.setToTranslation(entity.position);
-					modelToRender.transform.rotate(Vector3.Y, entity.rotation.y);
-					
-					modelBatch.render(modelToRender, environment);
-					if (entity instanceof PlayerCharacter && (entity != player || GameState.InteractionMode == GameState.MODE_SPECTATE) && cam.frustum.pointInFrustum(entity.position)) {
-						final Vector3 labelPos = cam.project(new Vector3(entity.position));
-						labels.add(new Label2d(labelPos, entity.name));
-					}
-				}
-			}
+			// TODO Would be more elegant with multi-iterator
+			for (Entity entity : stage.entities.values())
+				drawEntity(labels, entity);
+			for (Entity entity : stage.localEntities)
+				drawEntity(labels, entity);			
 			modelBatch.end();
 			
 			waterShader.begin();
@@ -216,6 +202,26 @@ public class GameScreen implements Screen {
 		}
 
 		hud.render(labels);
+	}
+
+	private void drawEntity(final ArrayList<Label2d> labels, Entity entity) {
+		synchronized (stage) {
+			//only draw local player if (GameState.InteractionMode == GameState.MODE_SPECTATE) { }
+			ModelInstance modelToRender = playerIndicatorModelInstance;
+			if (entity instanceof Relic)
+				modelToRender = relicModelInstance;
+			else if (entity instanceof Particle)
+				modelToRender = particleModelInstance;
+			
+			modelToRender.transform.setToTranslation(entity.position);
+			modelToRender.transform.rotate(Vector3.Y, entity.rotation.y);
+			
+			modelBatch.render(modelToRender, environment);
+			if (entity instanceof PlayerCharacter && (entity != player || GameState.InteractionMode == GameState.MODE_SPECTATE) && cam.frustum.pointInFrustum(entity.position)) {
+				final Vector3 labelPos = cam.project(new Vector3(entity.position));
+				labels.add(new Label2d(labelPos, entity.name));
+			}
+		}
 	}
 
 	private void rotateCameraAroundOrigin() {

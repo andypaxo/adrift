@@ -10,6 +10,7 @@ public class Particle extends Entity {
 		gravityMultiplier = 1;
 		bounciness = 0.8f;
 		timeToLive = 1 + (float) Math.random();
+		localOnly = true;
 	}
 
 

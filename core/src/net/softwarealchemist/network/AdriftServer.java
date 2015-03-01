@@ -20,6 +20,7 @@ public class AdriftServer {
 
 	public void setConfiguration(TerrainConfig configuration) {
 		this.configuration = configuration;
+		scheduler = new ScheduledThreadPoolExecutor(4);
 	}
 	
 	public void setStage(Stage stage) {
@@ -31,7 +32,6 @@ public class AdriftServer {
 	}
 
 	private void listen() {
-		scheduler = new ScheduledThreadPoolExecutor(10);
 		try {
 			serverSocket = new ServerSocket(10537);
 			while (true) {
