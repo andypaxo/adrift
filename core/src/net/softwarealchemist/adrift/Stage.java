@@ -22,6 +22,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntArray;
+import com.badlogic.gdx.utils.Logger;
 
 public class Stage implements ClientListener {
 	Terrain terrain;
@@ -166,7 +167,8 @@ public class Stage implements ClientListener {
 						Hud.log("Item collected : " + other.name);
 						for (int i = 0; i < 15; i++)
 							entitiesToAdd.add(makeParticle(other.position));
-						bling.play();
+						float volume = entity == player ? 1 : 1f / entity.position.dst(player.position);
+						bling.play(volume);
 					}
 			}
 		}
