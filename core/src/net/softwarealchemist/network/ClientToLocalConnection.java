@@ -1,13 +1,21 @@
 package net.softwarealchemist.network;
 
+import net.softwarealchemist.adrift.Hud;
 import net.softwarealchemist.adrift.dto.StateUpdate;
 
 public class ClientToLocalConnection implements ClientConnection {
+	
+	ServerToLocalConnection serverConnection;
+
+	public void setServerConnection(ServerToLocalConnection serverConnection) {
+		this.serverConnection = serverConnection;
+	}
 
 	@Override
 	public void send(StateUpdate update) {
-		// TODO Auto-generated method stub
-
+		if (update.getEvents().size() > 0)
+			Hud.log("Sending event to local server");
+		serverConnection.relayEvents(update.getEvents());
 	}
 
 	@Override

@@ -8,4 +8,6 @@ public interface ClientListener {
 	public void setPlayerId(int playerId);
 	public Entity getPlayer();
 	public void updateEntity(Entity entity);
+	
+	public void performPickup(int playerId, int objectId);
 }

@@ -8,8 +8,8 @@ import java.util.List;
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.entities.Particle;
-import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
+import net.softwarealchemist.adrift.events.PickupEvent;
 import net.softwarealchemist.network.AdriftClient;
 import net.softwarealchemist.network.AdriftServer;
 import net.softwarealchemist.network.Broadcaster;
@@ -33,11 +33,13 @@ public class Stage implements ClientListener {
 	private AdriftClient client;
 	private AdriftServer server;
 	private Broadcaster broadcaster;
+	private ArrayList<Entity> entitiesToAdd;
 	
 	public Stage(Terrain terrain, GameScreen gameScreen) {
 		this.terrain = terrain;
 		this.gameScreen = gameScreen;
 		entities = new HashMap<Integer, Entity>();
+		entitiesToAdd = new ArrayList<Entity>();
 		localEntities = new ArrayList<Entity>();
 	}
 
@@ -52,8 +54,10 @@ public class Stage implements ClientListener {
 		final ClientToLocalConnection clientConnection = new ClientToLocalConnection();
 		client = new AdriftClient(clientConnection, this);
 		
-		final ServerToLocalConnection serverConnection = new ServerToLocalConnection(client, this, terrain.getConfiguration());
+		final ServerToLocalConnection serverConnection = new ServerToLocalConnection(client, this, terrain.getConfiguration(), server);
 		server.addClient(serverConnection);
+		clientConnection.setServerConnection(serverConnection);
+		client.start();
 				
 		broadcaster = new Broadcaster();
 		broadcaster.start();
@@ -147,7 +151,6 @@ public class Stage implements ClientListener {
 	}
 	
 	public void doEvents() {
-		ArrayList<Entity> entitiesToAdd = new ArrayList<Entity>();
 		float nearestCollectibleDistance = Float.MAX_VALUE;
 		for (Entity entity : entities.values()) {
 			if (entity.canBeCollected) {
@@ -158,15 +161,12 @@ public class Stage implements ClientListener {
 			// This could get really tangled. 
 			// Might be a good idea for entities to have a way of hooking in their own event code
 			
-			if (entity instanceof PlayerCharacter) {
+			if (entity == player) {
 				for (Entity other : entities.values())
 					if (other.canBeCollected && !other.flaggedForRemoval && entity.intersectsWith(other)) {
-						other.flaggedForRemoval = true;
-						relicCount--;
-						Hud.log("Item collected : " + other.name);
-						for (int i = 0; i < 15; i++)
-							entitiesToAdd.add(makeParticle(other.position));
-						Sounds.itemGet(other);
+						PickupEvent event = new PickupEvent(player.id, other.id);
+						emitEvent(event);
+						event.execute(this);
 					}
 			}
 		}
@@ -175,11 +175,17 @@ public class Stage implements ClientListener {
 		
 		for (Entity entity : entitiesToAdd)
 			addEntity(entity);
+		entitiesToAdd.clear();
 
 		Hud.setInfo("Relics remaining", ""+relicCount);
 
 		removeFlaggedEntities(entities.values().iterator());
 		removeFlaggedEntities(localEntities.iterator());
+	}
+
+
+	private void emitEvent(PickupEvent event) {
+		client.addEvent(event);
 	}
 
 
@@ -263,5 +269,19 @@ public class Stage implements ClientListener {
 			client.dispose();
 		broadcaster.dispose();
 		Sounds.shutdown();
+	}
+
+
+	@Override
+	public void performPickup(int playerId, int objectId) {
+		Entity object = entities.get(new Integer(objectId));
+		if (object == null)
+			return;
+		object.flaggedForRemoval = true;
+		relicCount--;
+		Hud.log("Item collected : " + object.name);
+		for (int i = 0; i < 15; i++)
+			entitiesToAdd.add(makeParticle(object.position));
+		Sounds.itemGet(object);
 	}
 }
