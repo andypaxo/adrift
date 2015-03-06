@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.Entity;
@@ -153,7 +154,10 @@ public class Stage implements ClientListener {
 	
 	public void doEvents() {
 		float nearestCollectibleDistance = Float.MAX_VALUE;
-		for (Entity entity : entities.values()) {
+		List<Entity> activeEntities = entities.values().stream().filter((entity) -> entity.isActive()).collect(Collectors.toList());
+		for (Entity entity : activeEntities) {
+				
+			
 			if (entity.canBeCollected) {
 				float distance = player.position.dst(entity.position);
 				nearestCollectibleDistance = Math.min(distance, nearestCollectibleDistance);
