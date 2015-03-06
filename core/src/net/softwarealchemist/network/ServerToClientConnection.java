@@ -22,6 +22,8 @@ public class ServerToClientConnection implements ServerConnection {
 	private ObjectOutputStream output;
 	private AdriftServer server;
 	private List<Event> eventsToSend;
+	private boolean isDisposed;
+	private ObjectInputStream clientInput;
 
 	public ServerToClientConnection(Socket socket, Stage stage, TerrainConfig configuration, AdriftServer server) throws IOException {
 		this.socket = socket;
@@ -34,11 +36,11 @@ public class ServerToClientConnection implements ServerConnection {
 
 	public void listen() {
 		try {
-			final ObjectInputStream clientInput = new ObjectInputStream(socket.getInputStream());
+			clientInput = new ObjectInputStream(socket.getInputStream());
 			
 			output.writeObject(new ClientSetup(configuration, stage.getNextId()));
 			
-			while (true) {
+			while (!isDisposed) {
 				Object obj = clientInput.readObject();
 				if (obj instanceof StateUpdate) {
 					synchronized (stage) {
@@ -52,10 +54,14 @@ public class ServerToClientConnection implements ServerConnection {
 			}
 		} catch (Exception e) {
 			Hud.log("Client disconnected");
+			dispose();
 		}
 	}
 	
-	public void send() {	
+	public void send() {
+		if (isDisposed)
+			return;
+		
 		try {
 			ArrayList<Entity> updatedEntities = new ArrayList<Entity>(stage.entities.values());
 			output.writeObject(new StateUpdate(updatedEntities, eventsToSend));
@@ -63,11 +69,22 @@ public class ServerToClientConnection implements ServerConnection {
 			eventsToSend.clear();
 		} catch (Exception e) {
 			Hud.log("Communication problem. " + e.getClass() + " : " + e.getMessage());
+			dispose();
 		}
 	}
 
 	@Override
 	public void addEvents(List<Event> events) {
 		eventsToSend.addAll(events);
+	}
+	
+	public void dispose() {
+		isDisposed = true;
+		try {
+			clientInput.close();
+			output.close();
+		} catch (IOException e) {
+			// Well, can't do much now
+		}
 	}
 }
