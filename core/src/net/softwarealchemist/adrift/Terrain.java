@@ -227,7 +227,7 @@ public class Terrain {
 		configuration.caveScale = Math.random() * 7 + 3;
 		configuration.caveStretch = Math.random() + .5;
 		configuration.height = (int) (Math.random() * 16.0 + 64);
-		int sizeClass = (int) (Math.random() * 30.0);
+		int sizeClass = (int) (Math.random() * 20.0);
 		int size = 160 + 32 * sizeClass;
 		configuration.width = size;
 		configuration.depth = size;

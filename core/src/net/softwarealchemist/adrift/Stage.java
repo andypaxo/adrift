@@ -256,7 +256,7 @@ public class Stage implements ClientListener {
 	
 	public void updateEntity(Entity entity) {
 		if (entities.containsKey(entity.getKey())) {
-			Entity localEntity = entities.get(entity.getKey());
+			Entity localEntity = getEntityById(entity.getKey());
 			if (localEntity.isActive())
 				localEntity.updateFrom(entity);
 		} else {
@@ -278,14 +278,19 @@ public class Stage implements ClientListener {
 
 	@Override
 	public void performPickup(int playerId, int objectId) {
-		Entity object = entities.get(new Integer(objectId));
+		Entity object = getEntityById(objectId);
 		if (object == null)
 			return;
 		object.deactivate();
 		relicCount--;
-		Hud.log("Item collected : " + object.name);
 		for (int i = 0; i < 15; i++)
 			entitiesToAdd.add(makeParticle(object.position));
 		Sounds.itemGet(object);
+	}
+
+
+	@Override
+	public Entity getEntityById(int id) {
+		return entities.get(new Integer(id));
 	}
 }

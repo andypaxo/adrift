@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import net.softwarealchemist.adrift.Hud;
 import net.softwarealchemist.adrift.Stage;
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.events.Event;
@@ -59,11 +58,28 @@ public class AdriftServer {
 	}
 	
 	public void relayEvents(List<Event> events, ServerConnection sender) {
-		if (events.size() > 0)
-			Hud.log("Received events");
+		if (events.size() == 0)
+			return;
+		List<Event> knockOnEvents = processEvents(events);
+		sender.addEvents(knockOnEvents);
+		events.addAll(knockOnEvents);
 		for (ServerConnection connection : connections)
 			if (connection != sender)
 				connection.addEvents(events);
+	}
+
+	private List<Event> processEvents(List<Event> events) {
+		List<Event> knockOnEvents = new ArrayList<Event>();
+		
+		// This is where arbitration / conflict resolution could occur
+		for (Event event : events) {
+			List<Event> result = event.executeServer(stage);
+			if (result != null)
+				knockOnEvents.addAll(result);
+			
+		}
+		
+		return knockOnEvents;
 	}
 
 	public void dispose() {
