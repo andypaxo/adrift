@@ -16,7 +16,7 @@ public abstract class Entity implements Serializable {
 	public int id;
 	public String name;
 	public boolean canBeCollected;
-	public boolean flaggedForRemoval;
+	private boolean deactivated;
 	public boolean localOnly;
 
 	public Entity() {
@@ -57,4 +57,18 @@ public abstract class Entity implements Serializable {
 	public void step(float delta) {
 		
 	}
+	
+	public boolean isActive() {
+		return !deactivated;
+	}
+
+	public final boolean isInactive() {
+		return deactivated;
+	}
+
+	public final void deactivate() {
+		this.deactivated = true;
+	}
+	
+	
 }

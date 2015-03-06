@@ -205,6 +205,9 @@ public class GameScreen implements Screen {
 	}
 
 	private void drawEntity(final ArrayList<Label2d> labels, Entity entity) {
+		if (entity.isInactive())
+			return;
+		
 		synchronized (stage) {
 			//only draw local player if (GameState.InteractionMode == GameState.MODE_SPECTATE) { }
 			ModelInstance modelToRender = playerIndicatorModelInstance;

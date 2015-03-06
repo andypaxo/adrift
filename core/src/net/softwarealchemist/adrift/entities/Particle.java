@@ -19,6 +19,6 @@ public class Particle extends Entity {
 	public void step(float delta) {
 		timeToLive -= delta;
 		if (timeToLive <= 0)
-			flaggedForRemoval = true;
+			deactivate();
 	}
 }

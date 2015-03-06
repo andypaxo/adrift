@@ -8,6 +8,7 @@ import java.util.List;
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.entities.Particle;
+import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.adrift.events.PickupEvent;
 import net.softwarealchemist.network.AdriftClient;
@@ -163,7 +164,7 @@ public class Stage implements ClientListener {
 			
 			if (entity == player) {
 				for (Entity other : entities.values())
-					if (other.canBeCollected && !other.flaggedForRemoval && entity.intersectsWith(other)) {
+					if (other.canBeCollected && other.isActive() && entity.intersectsWith(other)) {
 						PickupEvent event = new PickupEvent(player.id, other.id);
 						emitEvent(event);
 						event.execute(this);
@@ -179,7 +180,6 @@ public class Stage implements ClientListener {
 
 		Hud.setInfo("Relics remaining", ""+relicCount);
 
-		removeFlaggedEntities(entities.values().iterator());
 		removeFlaggedEntities(localEntities.iterator());
 	}
 
@@ -191,7 +191,7 @@ public class Stage implements ClientListener {
 
 	private void removeFlaggedEntities(Iterator<Entity> entityIterator) {
 		while (entityIterator.hasNext()) {
-			if(entityIterator.next().flaggedForRemoval)
+			if(entityIterator.next().isInactive())
 				entityIterator.remove();
 		}
 	}
@@ -255,10 +255,13 @@ public class Stage implements ClientListener {
 	
 	public void updateEntity(Entity entity) {
 		if (entities.containsKey(entity.getKey())) {
-			entities.get(entity.getKey()).updateFrom(entity);
+			Entity localEntity = entities.get(entity.getKey());
+			if (localEntity.isActive())
+				localEntity.updateFrom(entity);
 		} else {
 			addEntity(entity);
-			Hud.log(entity.name + " has joined the party");
+			if (entity instanceof PlayerCharacter)
+				Hud.log(entity.name + " has joined the party");
 		}
 	}
 
@@ -277,7 +280,7 @@ public class Stage implements ClientListener {
 		Entity object = entities.get(new Integer(objectId));
 		if (object == null)
 			return;
-		object.flaggedForRemoval = true;
+		object.deactivate();
 		relicCount--;
 		Hud.log("Item collected : " + object.name);
 		for (int i = 0; i < 15; i++)
