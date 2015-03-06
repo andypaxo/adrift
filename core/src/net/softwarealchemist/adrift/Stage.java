@@ -166,13 +166,10 @@ public class Stage implements ClientListener {
 			// This could get really tangled. 
 			// Might be a good idea for entities to have a way of hooking in their own event code
 			
-			if (entity == player) {
-				for (Entity other : entities.values())
-					if (other.canBeCollected && other.isActive() && entity.intersectsWith(other)) {
-						PickupEvent event = new PickupEvent(player.id, other.id);
-						emitEvent(event);
-						event.execute(this);
-					}
+			if (entity.canBeCollected && entity.intersectsWith(player)) {
+				PickupEvent event = new PickupEvent(player.id, entity.id);
+				emitEvent(event);
+				event.execute(this);
 			}
 		}
 		
