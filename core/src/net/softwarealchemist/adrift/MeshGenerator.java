@@ -3,6 +3,7 @@ package net.softwarealchemist.adrift;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.softwarealchemist.adrift.entities.BlockTypes;
 import net.softwarealchemist.adrift.util.FloatBuffer;
 import net.softwarealchemist.adrift.util.ShortBuffer;
 
@@ -61,7 +62,7 @@ public class MeshGenerator {
 		for (int x = startX; x < startX + chunkSize; x++)
 			for (int z = startZ; z < startZ + chunkSize; z++)
 				if (terrain.get(x, 0, z) == 0)
-					addYQuad(x, -1, z, 1, 3);
+					addYQuad(x, -1, z, 1, BlockTypes.WATER);
 
 		return createMeshFromCurrentData();
 	}
@@ -188,15 +189,21 @@ public class MeshGenerator {
 		}
 	}
 
-	private final Vector3 water = new Vector3(.6f, 1f, 1);
-	private final Vector3 sand = new Vector3(1f, .8f, .6f);
 	private final Vector3 grass = new Vector3(.5f, .6f, .2f);
+	private final Vector3 sand = new Vector3(1f, .8f, .6f);
+	private final Vector3 water = new Vector3(.6f, 1f, 1);
+	private final Vector3 leaves = new Vector3(.8f, .6f, .2f);
+	private final Vector3 wood = new Vector3(.8f, .4f, .1f);
+	private final Vector3 stone = new Vector3(.5f, .5f, .5f);
 	private final Vector3 snow = new Vector3(.9f, .9f, 1f);
 	private final Vector3[] blockTypeColors = new Vector3[] {
 			null,
 			grass,
 			sand,
-			water
+			water,
+			leaves,
+			wood,
+			stone
 	};
 
 	private Vector3 colorScratchVector = new Vector3();
@@ -204,7 +211,7 @@ public class MeshGenerator {
 	private float[] debugColor = new float[] {2, 2, 0, 1};
 	
 	private float[] getColorForXFace(int x, int y, int z, int yBias, int zBias, int blockType) {
-		if (blockType == 255)
+		if (blockType == BlockTypes.DEBUG)
 			return debugColor;
 		
 		boolean isSnowCovered = y >= height - 16 && SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0;
@@ -221,7 +228,7 @@ public class MeshGenerator {
 	}
 	
 	private float[] getColorForYFace(int x, int y, int z, int xBias, int zBias, int blockType) {
-		if (blockType == 255)
+		if (blockType == BlockTypes.DEBUG)
 			return debugColor;
 
 		boolean isSnowCovered = y >= height - 16 && SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0;
@@ -237,7 +244,7 @@ public class MeshGenerator {
 	}
 	
 	private float[] getColorForZFace(int x, int y, int z, int xBias, int yBias, int blockType) {
-		if (blockType == 255)
+		if (blockType == BlockTypes.DEBUG)
 			return debugColor;
 
 		boolean isSnowCovered = y >= height - 16 && SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0;

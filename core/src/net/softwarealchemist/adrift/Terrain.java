@@ -25,10 +25,14 @@ public class Terrain {
 		long noiseStartTime = System.nanoTime();
 		generateVoxelData();
 		System.out.println(String.format("Noise generation took %.1f seconds", (System.nanoTime() - noiseStartTime) / 1000000000.0));
+		
+		addTrees();
+		addPlatforms();
+		
 		long caveStartTime = System.nanoTime();
 		removeUnreachableCaves();
 		System.out.println(String.format("Cave removal took %.1f seconds", (System.nanoTime() - caveStartTime) / 1000000000.0));
-		addTrees();
+		
 		calculateLights();
 
 		System.out.println(String.format("Generation complete in %.1f seconds", (System.nanoTime() - startTime) / 1000000000.0));
@@ -119,7 +123,7 @@ public class Terrain {
 			for (int z = 0; z < configuration.depth; z++)
 				for (int y = 0; y < configuration.height; y++)
 					if (get(x, y, z) == 0 && !(reachableRegions[regions.getInt(x, y, z)]))
-						set(x, y, z, 255);
+						set(x, y, z, BlockTypes.DEBUG);
 	}
 	
 	private void populateUnreachable(boolean[] reachableRegions, GraphNode graphNode) {
@@ -207,7 +211,7 @@ public class Terrain {
 	private void addTree(int x, int z) {		
 		int y;
 		for (y = configuration.height - 1; y >= 0; y--)
-			if (get(x, y, z) > 0)
+			if (get(x, y, z) == BlockTypes.GRASS)
 				break;
 		
 		if (y < 2)
@@ -217,24 +221,38 @@ public class Terrain {
 		int leavesHeight = (int)(rng.nextInt(3) + 4);
 		
 		for (int cY = 0; cY <= trunkHeight; cY++)
-			set(x, y + cY, z, 1);
+			set(x, y + cY, z, BlockTypes.WOOD);
 		
-		set(x + 1, y + trunkHeight, z, 1);
-		set(x - 1, y + trunkHeight, z, 1);
-		set(x, y + trunkHeight, z - 1, 1);
-		set(x, y + trunkHeight, z + 1, 1);
+		set(x + 1, y + trunkHeight, z, BlockTypes.LEAVES);
+		set(x - 1, y + trunkHeight, z, BlockTypes.LEAVES);
+		set(x, y + trunkHeight, z - 1, BlockTypes.LEAVES);
+		set(x, y + trunkHeight, z + 1, BlockTypes.LEAVES);
 
 		for (int cX = -1; cX <= 1; cX++)
 			for (int cZ = -1; cZ <= 1; cZ++)
 				for (int cY = trunkHeight + 1; cY < trunkHeight + leavesHeight; cY++)
-					set(x + cX, y + cY, z + cZ, 1);
+					set(x + cX, y + cY, z + cZ, BlockTypes.LEAVES);
 		
-//		set(x + 1, y + trunkHeight + leavesHeight, z, 1);
-//		set(x - 1, y + trunkHeight + leavesHeight, z, 1);
-//		set(x, y + trunkHeight + leavesHeight, z + 1, 1);
-//		set(x, y + trunkHeight + leavesHeight, z - 1, 1);
-		set(x, y + trunkHeight + leavesHeight, z, 1);
+		set(x, y + trunkHeight + leavesHeight, z, BlockTypes.LEAVES);
 
+	}
+
+	private void addPlatforms() {
+		int platformSize = 8;
+		addPlatform(0, 0, platformSize);
+		addPlatform(0, configuration.depth - platformSize - 1, platformSize);
+		addPlatform(configuration.width - platformSize - 1, 0, platformSize);
+		addPlatform(configuration.width - platformSize - 1, configuration.depth - platformSize - 1, platformSize);
+	}
+
+	private void addPlatform(int locX, int locZ, int platformSize) {
+		for (int x = locX; x < locX + platformSize; x++)
+			for (int z = locZ; z < locZ + platformSize; z++)
+				set(x, 0, z, BlockTypes.STONE);
+		
+		for (int x = locX + 1; x < locX + platformSize - 1; x++)
+			for (int z = locZ + 1; z < locZ + platformSize - 1; z++)
+				set(x, 1, z, BlockTypes.STONE);
 	}
 
 	public void configureRandom() {
