@@ -25,7 +25,9 @@ public class PickupEvent implements Event, Serializable {
 	@Override
 	public List<Event> executeServer(ClientListener listener) {
 		Entity collectedEntity = listener.getEntityById(objectId);
-		return Arrays.asList(new MessageEvent(playerId, "Collected " + collectedEntity.name));
+		return Arrays.asList(
+				new MessageEvent(playerId, "Collected " + collectedEntity.getName()),
+				new ItemGetEvent(playerId, objectId));
 	}
 	
 }

@@ -3,7 +3,6 @@ package net.softwarealchemist.network;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.softwarealchemist.adrift.Hud;
 import net.softwarealchemist.adrift.Stage;
 import net.softwarealchemist.adrift.dto.ClientSetup;
 import net.softwarealchemist.adrift.dto.StateUpdate;
@@ -40,10 +39,10 @@ public class ServerToLocalConnection implements ServerConnection {
 	
 	@Override
 	public void addEvents(List<Event> events) {
-		if (events.size() > 0)
-			Hud.log("Relaying events to local client");
-		StateUpdate update = new StateUpdate(new ArrayList<Entity>(), events);
-		client.objectReceived(update);
+		if (events.size() > 0) {
+			StateUpdate update = new StateUpdate(new ArrayList<Entity>(), events);
+			client.objectReceived(update);
+		}
 	}
 
 }

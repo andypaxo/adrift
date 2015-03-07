@@ -1,6 +1,8 @@
 package net.softwarealchemist.adrift.entities;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.badlogic.gdx.math.Vector3;
 
@@ -14,7 +16,7 @@ public abstract class Entity implements Serializable {
 	public float gravityMultiplier;
 	public float bounciness;
 	public int id;
-	public String name;
+	protected String name;
 	public boolean canBeCollected;
 	private boolean deactivated;
 	public boolean localOnly;
@@ -70,5 +72,11 @@ public abstract class Entity implements Serializable {
 		this.deactivated = true;
 	}
 	
+	public String getName() {
+		return name;
+	}
 	
+	public List<Item> dropItems() {
+		return new ArrayList<Item>();
+	}
 }

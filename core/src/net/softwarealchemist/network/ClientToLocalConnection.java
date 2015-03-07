@@ -1,6 +1,5 @@
 package net.softwarealchemist.network;
 
-import net.softwarealchemist.adrift.Hud;
 import net.softwarealchemist.adrift.dto.StateUpdate;
 
 public class ClientToLocalConnection implements ClientConnection {
@@ -14,8 +13,7 @@ public class ClientToLocalConnection implements ClientConnection {
 	@Override
 	public void send(StateUpdate update) {
 		if (update.getEvents().size() > 0)
-			Hud.log("Sending event to local server");
-		serverConnection.relayEvents(update.getEvents());
+			serverConnection.relayEvents(update.getEvents());
 	}
 
 	@Override

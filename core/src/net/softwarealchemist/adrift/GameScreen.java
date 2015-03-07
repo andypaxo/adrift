@@ -40,7 +40,7 @@ public class GameScreen implements Screen {
 	private float time = 0;
 	private Terrain terrain;
 	private Environment environment;
-	private Entity player;
+	private PlayerCharacter player;
 	private InputHandler inputHandler;
 	private Stage stage;
 	private Hud hud;
@@ -120,11 +120,10 @@ public class GameScreen implements Screen {
 	}
 
 	private void createPlayer() {
-		player = new PlayerCharacter();
+		player = new PlayerCharacter(System.getProperty("user.name"));
 		player.position.set(120, 0, 0);
 		player.rotation.set(0, 45, 0);
 		player.size.set(.8f, .99f, .8f);
-		player.name = System.getProperty("user.name");
 		player.id = stage.getNextId();
 		
 		final ModelBuilder modelBuilder = new ModelBuilder();
@@ -222,7 +221,7 @@ public class GameScreen implements Screen {
 			modelBatch.render(modelToRender, environment);
 			if (entity instanceof PlayerCharacter && (entity != player || GameState.InteractionMode == GameState.MODE_SPECTATE) && cam.frustum.pointInFrustum(entity.position)) {
 				final Vector3 labelPos = cam.project(new Vector3(entity.position));
-				labels.add(new Label2d(labelPos, entity.name));
+				labels.add(new Label2d(labelPos, entity.getName()));
 			}
 		}
 	}

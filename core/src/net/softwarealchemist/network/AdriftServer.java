@@ -76,7 +76,6 @@ public class AdriftServer {
 			List<Event> result = event.executeServer(stage);
 			if (result != null)
 				knockOnEvents.addAll(result);
-			
 		}
 		
 		return knockOnEvents;

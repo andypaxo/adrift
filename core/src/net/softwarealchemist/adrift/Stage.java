@@ -11,6 +11,7 @@ import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.entities.Particle;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
+import net.softwarealchemist.adrift.entities.RelicItem;
 import net.softwarealchemist.adrift.events.PickupEvent;
 import net.softwarealchemist.network.AdriftClient;
 import net.softwarealchemist.network.AdriftServer;
@@ -29,7 +30,7 @@ public class Stage implements ClientListener {
 	public List<Entity> localEntities;
 	private GameScreen gameScreen;
 	private int highestId;
-	private Entity player;
+	private PlayerCharacter player;
 	private int relicCount;
 	
 	private AdriftClient client;
@@ -86,7 +87,8 @@ public class Stage implements ClientListener {
 		System.out.println(String.format("Found %d valid relic locations", validLocations.size));
 		validLocations.shuffle();
 		for (relicCount = 0; relicCount < terrain.configuration.width * .1; relicCount++) {
-			final Relic relic = new Relic();
+			RelicItem item = new RelicItem("r" + relicCount);
+			final Relic relic = new Relic(item);
 			relic.id = getNextId();
 			int location = validLocations.get(relicCount);
 			relic.size.set(.75f, .75f, .75f);
@@ -95,7 +97,6 @@ public class Stage implements ClientListener {
 				location / (terrain.configuration.width * terrain.configuration.depth) + relic.size.y / 2f,
 				((location / terrain.configuration.width) % terrain.configuration.depth) + .5f
 			);
-			relic.name = "Relic " + relicCount;
 			addEntity(relic);
 		}
 
@@ -243,14 +244,14 @@ public class Stage implements ClientListener {
 		addEntity(player);
 	}
 
-	public void setPlayer(Entity player) {
+	public void setPlayer(PlayerCharacter player) {
 		addEntity(player);
 		this.player = player;
 		Sounds.startup(player);
 	}
 
 	@Override
-	public Entity getPlayer() {
+	public PlayerCharacter getPlayer() {
 		return player;
 	}
 	
@@ -262,7 +263,7 @@ public class Stage implements ClientListener {
 		} else {
 			addEntity(entity);
 			if (entity instanceof PlayerCharacter)
-				Hud.log(entity.name + " has joined the party");
+				Hud.log(entity.getName() + " has joined the party");
 		}
 	}
 

@@ -22,7 +22,7 @@ public class MessageEvent implements Event, Serializable {
 	@Override
 	public void execute(ClientListener listener) {
 		Entity player = listener.getEntityById(playerId);
-		String playerName = player == listener.getPlayer() ? "Me" : player.name;
+		String playerName = player == listener.getPlayer() ? "Me" : player.getName();
 		Hud.log(playerName + " : " + message);
 	}
 
