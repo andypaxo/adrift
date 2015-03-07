@@ -192,6 +192,12 @@ public class MeshGenerator {
 	private final Vector3 sand = new Vector3(1f, .8f, .6f);
 	private final Vector3 grass = new Vector3(.5f, .6f, .2f);
 	private final Vector3 snow = new Vector3(.9f, .9f, 1f);
+	private final Vector3[] blockTypeColors = new Vector3[] {
+			null,
+			grass,
+			sand,
+			water
+	};
 
 	private Vector3 colorScratchVector = new Vector3();
 	private FloatBuffer colorScratchArray = new FloatBuffer(4);
@@ -201,7 +207,8 @@ public class MeshGenerator {
 		if (blockType == 255)
 			return debugColor;
 		
-		colorScratchVector.set(y < 3 ? sand : (y < height - 16 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
+		boolean isSnowCovered = y >= height - 16 && SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0;
+		colorScratchVector.set(isSnowCovered ? snow : blockTypeColors[blockType]);
 		colorScratchVector.scl(
 				terrain.getLight(x, y, z) * .25f
 				+ terrain.getLight(x, y + yBias, z + zBias) * .25f
@@ -216,8 +223,9 @@ public class MeshGenerator {
 	private float[] getColorForYFace(int x, int y, int z, int xBias, int zBias, int blockType) {
 		if (blockType == 255)
 			return debugColor;
-		
-		colorScratchVector.set(y < 0 ? water : (y < 3 ? sand : (y < height - 26 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow))));
+
+		boolean isSnowCovered = y >= height - 16 && SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0;
+		colorScratchVector.set(isSnowCovered ? snow : blockTypeColors[blockType]);
 		colorScratchVector.scl(
 			terrain.getLight(x, y, z) * .25f
 			+ terrain.getLight(x + xBias, y, z + zBias) * .25f
@@ -231,8 +239,9 @@ public class MeshGenerator {
 	private float[] getColorForZFace(int x, int y, int z, int xBias, int yBias, int blockType) {
 		if (blockType == 255)
 			return debugColor;
-		
-		colorScratchVector.set(y < 3 ? sand : (y < height - 16 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
+
+		boolean isSnowCovered = y >= height - 16 && SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0;
+		colorScratchVector.set(isSnowCovered ? snow : blockTypeColors[blockType]);
 		colorScratchVector.scl(
 			terrain.getLight(x, y, z) * .25f
 			+ terrain.getLight(x + xBias, y + yBias, z) * .25f

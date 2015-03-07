@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
+import net.softwarealchemist.adrift.entities.BlockTypes;
 import net.softwarealchemist.adrift.util.GraphNode;
 import net.softwarealchemist.adrift.util.IntMapReader;
 
@@ -36,6 +37,7 @@ public class Terrain {
 	private void generateVoxelData() {
 		double heightAtPoint, distFromCentre;
 		double caveValue, caveThreshold = .8f;
+		int blockType;
 		
 		for (int x = 0; x < configuration.width; x++)
 			for (int z = 0; z < configuration.depth; z++) {
@@ -51,7 +53,8 @@ public class Terrain {
 							x * configuration.caveScale / configuration.width) + configuration.seed + 30000,
 							z * configuration.caveScale / configuration.depth,
 							y * configuration.caveScale / configuration.caveStretch / configuration.height) * .5 + .5;
-					set(x, y, z, (y / (double) configuration.height) < heightAtPoint && caveValue < caveThreshold ? 1 : 0);
+					blockType = y < 3 ? BlockTypes.SAND : BlockTypes.GRASS;
+					set(x, y, z, (y / (double) configuration.height) < heightAtPoint && caveValue < caveThreshold ? blockType : 0);
 				}
 			}
 	}
