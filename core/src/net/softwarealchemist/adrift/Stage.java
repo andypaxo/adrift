@@ -72,7 +72,6 @@ public class Stage implements ClientListener {
 		client.start();
 	}
 	
-	// TODO : This should only be called by server
 	public void generateRelics () {
 		long startTime = System.nanoTime();
 
@@ -116,9 +115,6 @@ public class Stage implements ClientListener {
 			stepEntity(timeStep, scratch, entity);
 		for (Entity entity : localEntities)
 			stepEntity(timeStep, scratch, entity);
-
-		int playerRegion = terrain.regions.getInt((int) player.position.x, (int) player.position.y, (int) player.position.z);
-		Hud.setInfo("Region", "" + playerRegion);
 	}
 
 
@@ -137,7 +133,8 @@ public class Stage implements ClientListener {
 		}
 		if (entity.velocity.y != 0) {
 			entity.position.y += scratch.y;
-			if (entity.position.y < entity.size.y * .5f || collisionWithTerrain(entity)) {
+			boolean blockedByGround = GameState.InteractionMode == GameState.MODE_WALK && entity.position.y < entity.size.y * .5f;
+			if (blockedByGround || collisionWithTerrain(entity)) {
 				entity.position.y = resolve(entity.position.y, scratch.y, entity.size.y); // Back out
 				entity.velocity.y = entity.velocity.y * (-entity.bounciness);
 			}

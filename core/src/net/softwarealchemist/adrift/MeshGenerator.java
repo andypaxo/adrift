@@ -61,7 +61,7 @@ public class MeshGenerator {
 		for (int x = startX; x < startX + chunkSize; x++)
 			for (int z = startZ; z < startZ + chunkSize; z++)
 				if (terrain.get(x, 0, z) == 0)
-					addYQuad(x, -1, z, 1);
+					addYQuad(x, -1, z, 1, 3);
 
 		return createMeshFromCurrentData();
 	}
@@ -70,18 +70,19 @@ public class MeshGenerator {
 		for (int x = startX; x < startX + chunkSize; x++) {
 			for (int z = startZ; z < startZ + chunkSize; z++) {
 				for (int y = 0; y < height; y++) {
-					if (terrain.get(x, y, z) > 0 && terrain.get(x, y + 1, z) == 0)
-						addYQuad(x, y, z, 1);
-					if (y > 0 && terrain.get(x, y, z) > 0 && terrain.get(x, y - 1, z) == 0)
-						addYQuad(x, y, z, -1);
-					if (terrain.get(x, y, z) > 0 && terrain.get(x + 1, y, z) == 0)
-						addXQuad(x, y, z, 1);
-					if (terrain.get(x, y, z) > 0 && terrain.get(x - 1, y, z) == 0)
-						addXQuad(x, y, z, -1);
-					if (terrain.get(x, y, z) > 0 && terrain.get(x, y, z + 1) == 0)
-						addZQuad(x, y, z, 1);
-					if (terrain.get(x, y, z) > 0 && terrain.get(x, y, z - 1) == 0)
-						addZQuad(x, y, z, -1);
+					int blockType = terrain.get(x, y, z);
+					if (blockType > 0 && terrain.get(x, y + 1, z) == 0)
+						addYQuad(x, y, z, 1, blockType);
+					if (y > 0 && blockType > 0 && terrain.get(x, y - 1, z) == 0)
+						addYQuad(x, y, z, -1, blockType);
+					if (blockType > 0 && terrain.get(x + 1, y, z) == 0)
+						addXQuad(x, y, z, 1, blockType);
+					if (blockType > 0 && terrain.get(x - 1, y, z) == 0)
+						addXQuad(x, y, z, -1, blockType);
+					if (blockType > 0 && terrain.get(x, y, z + 1) == 0)
+						addZQuad(x, y, z, 1, blockType);
+					if (blockType > 0 && terrain.get(x, y, z - 1) == 0)
+						addZQuad(x, y, z, -1, blockType);
 				}
 			}
 		}
@@ -100,25 +101,25 @@ public class MeshGenerator {
 		return mesh;
 	}
 
-	private void addXQuad(int x, int y, int z, float direction) {
+	private void addXQuad(int x, int y, int z, float direction, int blockType) {
 		float offset = direction > 0 ? 1 : 0;
 		short indexBase = (short) (vertices.length / vertexLength);
 
 		vertices.add(x + offset, y, z + 1);
 		vertices.add(direction, 0f, 0f);
-		vertices.add(getColorForXFace(x + (int)direction, y, z, -1, 1));
+		vertices.add(getColorForXFace(x + (int)direction, y, z, -1, 1, blockType));
 
 		vertices.add(x + offset, y + 1, z + 1);
 		vertices.add(direction, 0f, 0f);
-		vertices.add(getColorForXFace(x + (int)direction, y, z, 1, 1));
+		vertices.add(getColorForXFace(x + (int)direction, y, z, 1, 1, blockType));
 
 		vertices.add(x + offset, y + 1, z);
 		vertices.add(direction, 0f, 0f);
-		vertices.add(getColorForXFace(x + (int)direction, y, z, 1, -1));
+		vertices.add(getColorForXFace(x + (int)direction, y, z, 1, -1, blockType));
 
 		vertices.add(x + offset, y, z);
 		vertices.add(direction, 0f, 0f);
-		vertices.add(getColorForXFace(x + (int)direction, y, z, -1, -1));
+		vertices.add(getColorForXFace(x + (int)direction, y, z, -1, -1, blockType));
 
 		if (direction > 0) {
 			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 1));
@@ -129,25 +130,25 @@ public class MeshGenerator {
 		}
 	}
 	
-	private void addYQuad(int x, int y, int z, float direction) {
+	private void addYQuad(int x, int y, int z, float direction, int blockType) {
 		float offset = direction > 0 ? 1 : 0;
 		short indexBase = (short) (vertices.length / vertexLength);
 
 		vertices.add(x, y + offset, z + 1);
 		vertices.add(0f, direction, 0f);
-		vertices.add(getColorForYFace(x, y, z, -1, 1));
+		vertices.add(getColorForYFace(x, y, z, -1, 1, blockType));
 
 		vertices.add(x + 1, y + offset, z + 1);
 		vertices.add(0f, direction, 0f);
-		vertices.add(getColorForYFace(x, y, z, 1, 1));
+		vertices.add(getColorForYFace(x, y, z, 1, 1, blockType));
 
 		vertices.add(x + 1, y + offset, z);
 		vertices.add(0f, direction, 0f);
-		vertices.add(getColorForYFace(x, y, z, 1, -1));
+		vertices.add(getColorForYFace(x, y, z, 1, -1, blockType));
 
 		vertices.add(x, y + offset, z);
 		vertices.add(0f, direction, 0f);
-		vertices.add(getColorForYFace(x, y, z, -1, -1));
+		vertices.add(getColorForYFace(x, y, z, -1, -1, blockType));
 
 		if (direction > 0) {
 			indices.add(indexBase, (short) (indexBase + 1), (short) (indexBase + 2));
@@ -158,25 +159,25 @@ public class MeshGenerator {
 		}
 	}
 
-	private void addZQuad(int x, int y, int z, float direction) {
+	private void addZQuad(int x, int y, int z, float direction, int blockType) {
 		float offset = direction > 0 ? 1 : 0;
 		short indexBase = (short) (vertices.length / vertexLength);
 
 		vertices.add(x + 1, y, z + offset);
 		vertices.add(0f, 0f, direction);
-		vertices.add(getColorForZFace(x, y, z + (int)direction, 1, -1));
+		vertices.add(getColorForZFace(x, y, z + (int)direction, 1, -1, blockType));
 
 		vertices.add(x + 1, y + 1, z + offset);
 		vertices.add(0f, 0f, direction);
-		vertices.add(getColorForZFace(x, y, z + (int)direction, 1, 1));
+		vertices.add(getColorForZFace(x, y, z + (int)direction, 1, 1, blockType));
 
 		vertices.add(x, y + 1, z + offset);
 		vertices.add(0f, 0f, direction);
-		vertices.add(getColorForZFace(x, y, z + (int)direction, -1, 1));
+		vertices.add(getColorForZFace(x, y, z + (int)direction, -1, 1, blockType));
 
 		vertices.add(x, y, z + offset);
 		vertices.add(0f, 0f, direction);
-		vertices.add(getColorForZFace(x, y, z + (int)direction, -1, -1));
+		vertices.add(getColorForZFace(x, y, z + (int)direction, -1, -1, blockType));
 
 		if (direction < 0) {
 			indices.add(indexBase, (short) (indexBase + 2), (short) (indexBase + 1));
@@ -194,8 +195,12 @@ public class MeshGenerator {
 
 	private Vector3 colorScratchVector = new Vector3();
 	private FloatBuffer colorScratchArray = new FloatBuffer(4);
+	private float[] debugColor = new float[] {2, 2, 0, 1};
 	
-	private float[] getColorForXFace(int x, int y, int z, int yBias, int zBias) {
+	private float[] getColorForXFace(int x, int y, int z, int yBias, int zBias, int blockType) {
+		if (blockType == 255)
+			return debugColor;
+		
 		colorScratchVector.set(y < 3 ? sand : (y < height - 16 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
 		colorScratchVector.scl(
 				terrain.getLight(x, y, z) * .25f
@@ -204,10 +209,14 @@ public class MeshGenerator {
 				+ terrain.getLight(x, y, z + zBias) * .25f);
 		colorScratchArray.reset();
 		colorScratchArray.add(colorScratchVector.x, colorScratchVector.y, colorScratchVector.z, 1);
+		
 		return colorScratchArray.buffer;
 	}
 	
-	private float[] getColorForYFace(int x, int y, int z, int xBias, int zBias) {
+	private float[] getColorForYFace(int x, int y, int z, int xBias, int zBias, int blockType) {
+		if (blockType == 255)
+			return debugColor;
+		
 		colorScratchVector.set(y < 0 ? water : (y < 3 ? sand : (y < height - 26 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow))));
 		colorScratchVector.scl(
 			terrain.getLight(x, y, z) * .25f
@@ -219,7 +228,10 @@ public class MeshGenerator {
 		return colorScratchArray.buffer;
 	}
 	
-	private float[] getColorForZFace(int x, int y, int z, int xBias, int yBias) {
+	private float[] getColorForZFace(int x, int y, int z, int xBias, int yBias, int blockType) {
+		if (blockType == 255)
+			return debugColor;
+		
 		colorScratchVector.set(y < 3 ? sand : (y < height - 16 ? grass : (SimplexNoise.noise(x * 32 / width, z * 32 / depth) > 0 ? grass : snow)));
 		colorScratchVector.scl(
 			terrain.getLight(x, y, z) * .25f

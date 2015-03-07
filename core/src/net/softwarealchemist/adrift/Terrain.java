@@ -1,9 +1,11 @@
 package net.softwarealchemist.adrift;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
+import net.softwarealchemist.adrift.util.GraphNode;
 import net.softwarealchemist.adrift.util.IntMapReader;
 
 public class Terrain {
@@ -11,7 +13,6 @@ public class Terrain {
 	private float[] lightData;
 	public TerrainConfig configuration = new TerrainConfig();
 	private Random rng;
-	IntMapReader regions;
 
 	public void generate() {
 		System.out.println("Generating voxel data");
@@ -20,7 +21,9 @@ public class Terrain {
 		voxelData = new int[configuration.width * configuration.depth * configuration.height];
 		lightData = new float[voxelData.length];
 
+		long noiseStartTime = System.nanoTime();
 		generateVoxelData();
+		System.out.println(String.format("Noise generation took %.1f seconds", (System.nanoTime() - noiseStartTime) / 1000000000.0));
 		long caveStartTime = System.nanoTime();
 		removeUnreachableCaves();
 		System.out.println(String.format("Cave removal took %.1f seconds", (System.nanoTime() - caveStartTime) / 1000000000.0));
@@ -55,11 +58,11 @@ public class Terrain {
 	
 	private void removeUnreachableCaves() {
 		int[] regionData = new int[voxelData.length];
-		regions = new IntMapReader(configuration.width, configuration.depth, configuration.height, 0, regionData);
+		IntMapReader regions = new IntMapReader(configuration.width, configuration.depth, configuration.height, 0, regionData);
 		Arrays.fill(regionData, -1);
 		int maxGroup = 0;
 		int groupX, groupY, groupZ, minGroup;
-		boolean[][] equivalencyMatrix = new boolean[4096][4096];
+		ArrayList<GraphNode> groupChains = new ArrayList<GraphNode>();
 
 		// Label all unoccupied cells with groups
 		for (int y = configuration.height - 1; y >= 0; y--) {
@@ -85,33 +88,43 @@ public class Terrain {
 					if (minGroup < 0)
 					{
 						// New group
+						groupChains.add(new GraphNode(maxGroup));
 						regions.setInt(x, y, z, maxGroup++);
 					} else {
 						// Existing group. Make sure adjacent groups are joined.
 						regions.setInt(x, y, z, minGroup);
-						if (groupX >= 0 && groupX != minGroup)
-							equivalencyMatrix[minGroup][groupX] = true;
-						if (groupY >= 0 && groupY != minGroup)
-							equivalencyMatrix[minGroup][groupY] = true;
-						if (groupZ >= 0 && groupZ != minGroup)
-							equivalencyMatrix[minGroup][groupZ] = true;
+						if (groupX >= 0 && groupX != minGroup) {
+							groupChains.get(minGroup).addNeighbor(groupChains.get(groupX));
+						}
+						if (groupY >= 0 && groupY != minGroup) {
+							groupChains.get(minGroup).addNeighbor(groupChains.get(groupY));
+						}
+						if (groupZ >= 0 && groupZ != minGroup) {
+							groupChains.get(minGroup).addNeighbor(groupChains.get(groupZ));
+						}
 					}
 				}
 			}
 		}
 		
 		System.out.println(String.format("Finished with %d groups", maxGroup));
-		
-		// Build full equivalency (group 0 only, as that's all we need)
-		equivalencyMatrix[0][0] = true;
-		for (int groupN = 1; groupN <= maxGroup; groupN++)
-			equivalencyMatrix[0][groupN] |= equivalencyMatrix[groupN][0];
+
+		boolean [] reachableRegions = new boolean[maxGroup];
+		populateUnreachable(reachableRegions, groupChains.get(0));
 		
 		for (int x = 0; x < configuration.width; x++)
 			for (int z = 0; z < configuration.depth; z++)
 				for (int y = 0; y < configuration.height; y++)
-					if (get(x, y, z) == 0 && !(equivalencyMatrix[0][regions.getInt(x, y, z)]))
-						set(x, y, z, 1);
+					if (get(x, y, z) == 0 && !(reachableRegions[regions.getInt(x, y, z)]))
+						set(x, y, z, 255);
+	}
+	
+	private void populateUnreachable(boolean[] reachableRegions, GraphNode graphNode) {
+		if (reachableRegions[graphNode.tag])
+			return;
+		reachableRegions[graphNode.tag] = true;
+		for (GraphNode neighboringNode : graphNode.getNeighbors())
+			populateUnreachable(reachableRegions, neighboringNode);
 	}
 	
 	private int minPositive(int a, int b, int c) {
