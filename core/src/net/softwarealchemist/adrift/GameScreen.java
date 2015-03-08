@@ -7,9 +7,11 @@ import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.entities.Particle;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
+import net.softwarealchemist.adrift.entities.RelicSlot;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -29,12 +31,22 @@ public class GameScreen implements Screen {
 
 	private Model terrainModel;
 	private ModelInstance terrainModelInstance;
+	
 	private Model playerIndicatorModel;
 	private ModelInstance playerIndicatorModelInstance;
+	
 	private Model relicModel;
 	private ModelInstance relicModelInstance;
+	
 	private Model particleModel;
 	private ModelInstance particleModelInstance;
+	
+	private Model emptyRelicSlotModel;
+	private ModelInstance emptyRelicSlotInstance;
+	
+	private Model activeRelicSlotModel;
+	private ModelInstance activeRelicSlotlInstance;
+	
 	private ModelBatch modelBatch;
 	private PerspectiveCamera cam;
 	private float time = 0;
@@ -68,12 +80,16 @@ public class GameScreen implements Screen {
 		
 		time = 0;
 		
-		if (GameState.server == null)
+		if (serverIsLocal())
 			stage.startWithLocalServer();
 		else
 			stage.startWithRemoteServer();
 		
 		System.out.println("Game screen initialized");
+	}
+
+	private boolean serverIsLocal() {
+		return GameState.server == null;
 	}
 	
 	public void startTerrainGeneration() {
@@ -83,7 +99,11 @@ public class GameScreen implements Screen {
 	private void createTerrain() {
 		terrain.generate();
 		terrainGenerationComplete = true;
-		stage.generateRelics();
+		if (serverIsLocal())
+		{
+			stage.pullEntitiesFromTerrain();
+			stage.generateRelics();
+		}
 	}
 	
 	private void createMeshes() {
@@ -147,6 +167,12 @@ public class GameScreen implements Screen {
 						ColorAttribute.createDiffuse(1, 1, .2f, 1)),
 				Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		particleModelInstance = new ModelInstance(particleModel);
+		
+		emptyRelicSlotModel = modelBuilder.createBox(
+				.9f, .1f, .9f,
+				new Material(ColorAttribute.createDiffuse(Color.WHITE)),
+				Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+		emptyRelicSlotInstance = new ModelInstance(emptyRelicSlotModel);
 	}
 
 	private long lastFpsCountTime;
@@ -225,6 +251,8 @@ public class GameScreen implements Screen {
 				modelToRender = relicModelInstance;
 			else if (entity instanceof Particle)
 				modelToRender = particleModelInstance;
+			else if (entity instanceof RelicSlot)
+				modelToRender = emptyRelicSlotInstance;
 			
 			modelToRender.transform.setToTranslation(entity.position);
 			modelToRender.transform.rotate(Vector3.Y, entity.rotation.y);
@@ -269,6 +297,8 @@ public class GameScreen implements Screen {
 		playerIndicatorModel.dispose();
 		relicModel.dispose();
 		particleModel.dispose();
+		emptyRelicSlotModel.dispose();
+		activeRelicSlotModel.dispose();
 		for (Mesh waterMesh : waterMeshes)
 			waterMesh.dispose();
 		waterShader.dispose();

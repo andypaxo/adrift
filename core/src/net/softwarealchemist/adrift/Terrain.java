@@ -2,10 +2,13 @@ package net.softwarealchemist.adrift;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.BlockTypes;
+import net.softwarealchemist.adrift.entities.Entity;
+import net.softwarealchemist.adrift.entities.RelicSlot;
 import net.softwarealchemist.adrift.util.GraphNode;
 import net.softwarealchemist.adrift.util.IntMapReader;
 
@@ -13,6 +16,7 @@ public class Terrain {
 	private int[] voxelData;
 	private float[] lightData;
 	public TerrainConfig configuration = new TerrainConfig();
+	public List<Entity> predefinedEntities;
 	private Random rng;
 
 	public void generate() {
@@ -26,6 +30,7 @@ public class Terrain {
 		generateVoxelData();
 		System.out.println(String.format("Noise generation took %.1f seconds", (System.nanoTime() - noiseStartTime) / 1000000000.0));
 		
+		predefinedEntities = new ArrayList<Entity>();
 		addTrees();
 		addPlatforms();
 		
@@ -239,10 +244,11 @@ public class Terrain {
 
 	private void addPlatforms() {
 		int platformSize = 8;
-		addPlatform(0, 0, platformSize);
-		addPlatform(0, configuration.depth - platformSize - 1, platformSize);
-		addPlatform(configuration.width - platformSize - 1, 0, platformSize);
-		addPlatform(configuration.width - platformSize - 1, configuration.depth - platformSize - 1, platformSize);
+		int offset = 16;
+		addPlatform(offset, offset, platformSize);
+		addPlatform(offset, configuration.depth - platformSize - offset - 1, platformSize);
+		addPlatform(configuration.width - platformSize - offset - 1, offset, platformSize);
+		addPlatform(configuration.width - platformSize - offset - 1, configuration.depth - platformSize - offset - 1, platformSize);
 	}
 
 	private void addPlatform(int locX, int locZ, int platformSize) {
@@ -253,6 +259,11 @@ public class Terrain {
 		for (int x = locX + 1; x < locX + platformSize - 1; x++)
 			for (int z = locZ + 1; z < locZ + platformSize - 1; z++)
 				set(x, 1, z, BlockTypes.STONE);
+		
+		RelicSlot relicSlot = new RelicSlot();
+		float slotOffset = platformSize * .5f;
+		relicSlot.position.set(locX + slotOffset, 2, locZ + slotOffset);
+		predefinedEntities.add(relicSlot);
 	}
 
 	public void configureRandom() {

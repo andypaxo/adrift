@@ -72,6 +72,7 @@ public class Stage implements ClientListener {
 		client.start();
 	}
 	
+	// Should be part of server?
 	public void generateRelics () {
 		long startTime = System.nanoTime();
 
@@ -100,6 +101,14 @@ public class Stage implements ClientListener {
 		}
 
 		System.out.println(String.format("%d relics added in %.1f seconds", relicCount, (System.nanoTime() - startTime) / 1000000000.0));
+	}
+
+
+	public void pullEntitiesFromTerrain() {
+		for (Entity entity : terrain.predefinedEntities) {
+			entity.id = getNextId();
+			addEntity(entity);
+		}
 	}
 	
 	public void addEntity(Entity entity) {
