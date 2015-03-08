@@ -12,6 +12,7 @@ import net.softwarealchemist.adrift.entities.Particle;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.adrift.entities.RelicItem;
+import net.softwarealchemist.adrift.entities.RelicSlot;
 import net.softwarealchemist.adrift.events.PickupEvent;
 import net.softwarealchemist.network.AdriftClient;
 import net.softwarealchemist.network.AdriftServer;
@@ -172,11 +173,22 @@ public class Stage implements ClientListener {
 			
 			// This could get really tangled. 
 			// Might be a good idea for entities to have a way of hooking in their own event code
-			
-			if (entity.canBeCollected && entity.intersectsWith(player)) {
-				PickupEvent event = new PickupEvent(player.id, entity.id);
-				emitEvent(event);
-				event.execute(this);
+			if (entity.intersectsWith(player)) {
+				if (entity.canBeCollected) {
+					PickupEvent event = new PickupEvent(player.id, entity.id);
+					emitEvent(event);
+					event.execute(this);
+				}
+
+				// Awful. Fix this.
+				if (entity instanceof RelicSlot) {
+					// Use event so this propagates
+					if (player.getInventory().size() > 0) {
+						player.removeFromInventory(player.getInventory().get(0));
+						Hud.setInfo("Inventory", player.describeInventory());
+						((RelicSlot) entity).isActivated = true;
+					}
+				}
 			}
 		}
 		

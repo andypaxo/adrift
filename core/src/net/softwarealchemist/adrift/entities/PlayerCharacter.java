@@ -21,4 +21,14 @@ public class PlayerCharacter extends Entity {
 	public List<Item> getInventory() {
 		return inventory.stream().collect(Collectors.toList());
 	}
+
+	public void removeFromInventory(Item item) {
+		inventory.remove(item);
+	}
+
+	public String describeInventory() {
+		return inventory.stream()
+			.map((item) -> item.getName())
+			.reduce("", (prev, current) -> prev + " " + current);
+	}
 }

@@ -243,7 +243,7 @@ public class Terrain {
 	}
 
 	private void addPlatforms() {
-		int platformSize = 8;
+		int platformSize = 12;
 		int offset = 16;
 		addPlatform(offset, offset, platformSize);
 		addPlatform(offset, configuration.depth - platformSize - offset - 1, platformSize);
@@ -260,9 +260,15 @@ public class Terrain {
 			for (int z = locZ + 1; z < locZ + platformSize - 1; z++)
 				set(x, 1, z, BlockTypes.STONE);
 		
+		addRelicSlot(locX + 3, locZ + 3);
+		addRelicSlot(locX + platformSize - 3, locZ + 3);
+		addRelicSlot(locX + 3, locZ + platformSize - 3);
+		addRelicSlot(locX + platformSize - 3, locZ + platformSize - 3);
+	}
+
+	private void addRelicSlot(float slotOffsetX, float slotOffsetZ) {
 		RelicSlot relicSlot = new RelicSlot();
-		float slotOffset = platformSize * .5f;
-		relicSlot.position.set(locX + slotOffset, 2, locZ + slotOffset);
+		relicSlot.position.set(slotOffsetX, 2.1f, slotOffsetZ);
 		predefinedEntities.add(relicSlot);
 	}
 

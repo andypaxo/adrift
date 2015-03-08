@@ -25,11 +25,7 @@ public class ItemGetEvent implements Event, Serializable {
 		if (player.id == playerId) {
 			Entity entity = listener.getEntityById(objectId);
 			player.addToInventory(entity.dropItems());
-			String inventoryDescription = player
-				.getInventory().stream()
-				.map((item) -> item.getName())
-				.reduce("", (prev, current) -> prev + " " + current);
-			Hud.setInfo("Inventory", inventoryDescription);
+			Hud.setInfo("Inventory", player.describeInventory());
 		}
 	}
 

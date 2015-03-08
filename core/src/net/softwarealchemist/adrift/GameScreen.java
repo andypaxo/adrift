@@ -45,7 +45,7 @@ public class GameScreen implements Screen {
 	private ModelInstance emptyRelicSlotInstance;
 	
 	private Model activeRelicSlotModel;
-	private ModelInstance activeRelicSlotlInstance;
+	private ModelInstance activeRelicSlotInstance;
 	
 	private ModelBatch modelBatch;
 	private PerspectiveCamera cam;
@@ -168,11 +168,17 @@ public class GameScreen implements Screen {
 				Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		particleModelInstance = new ModelInstance(particleModel);
 		
-		emptyRelicSlotModel = modelBuilder.createBox(
-				.9f, .1f, .9f,
+		emptyRelicSlotModel = modelBuilder.createCone(
+				.9f, .1f, .9f, 4,
 				new Material(ColorAttribute.createDiffuse(Color.WHITE)),
 				Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		emptyRelicSlotInstance = new ModelInstance(emptyRelicSlotModel);
+		
+		activeRelicSlotModel = modelBuilder.createCone(
+				.9f, .1f, .9f, 4,
+				new Material(ColorAttribute.createDiffuse(.2f, 1f, .2f, 1)),
+				Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+		activeRelicSlotInstance = new ModelInstance(activeRelicSlotModel);
 	}
 
 	private long lastFpsCountTime;
@@ -252,7 +258,7 @@ public class GameScreen implements Screen {
 			else if (entity instanceof Particle)
 				modelToRender = particleModelInstance;
 			else if (entity instanceof RelicSlot)
-				modelToRender = emptyRelicSlotInstance;
+				modelToRender = ((RelicSlot)entity).isActivated ? activeRelicSlotInstance : emptyRelicSlotInstance;
 			
 			modelToRender.transform.setToTranslation(entity.position);
 			modelToRender.transform.rotate(Vector3.Y, entity.rotation.y);
