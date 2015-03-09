@@ -32,7 +32,10 @@ public class Stage implements ClientListener {
 	private GameScreen gameScreen;
 	private int highestId;
 	private PlayerCharacter player;
+	
 	private int relicCount;
+	private int slotCount;
+	private int slotsActivated;
 	
 	private AdriftClient client;
 	private AdriftServer server;
@@ -87,11 +90,11 @@ public class Stage implements ClientListener {
 		
 		System.out.println(String.format("Found %d valid relic locations", validLocations.size));
 		validLocations.shuffle();
-		for (relicCount = 0; relicCount < terrain.configuration.width * .1; relicCount++) {
-			RelicItem item = new RelicItem("r" + relicCount);
+		for (int relicN = 0; relicN < terrain.configuration.width * .1; relicN++) {
+			RelicItem item = new RelicItem("r" + relicN);
 			final Relic relic = new Relic(item);
 			relic.id = getNextId();
-			int location = validLocations.get(relicCount);
+			int location = validLocations.get(relicN);
 			relic.size.set(.75f, .75f, .75f);
 			relic.position.set(
 				(location % terrain.configuration.width) + .5f,
@@ -117,6 +120,11 @@ public class Stage implements ClientListener {
 			localEntities.add(entity);
 		else
 			entities.put(entity.getKey(), entity);
+		
+		if (entity instanceof Relic)
+			relicCount++;
+		else if (entity instanceof RelicSlot)
+			slotCount++;
 	}
 	
 	public void step(float timeStep) {
@@ -283,7 +291,6 @@ public class Stage implements ClientListener {
 		Sounds.shutdown();
 	}
 
-
 	@Override
 	public void performPickup(int playerId, int objectId) {
 		Entity object = getEntityById(objectId);
@@ -296,17 +303,17 @@ public class Stage implements ClientListener {
 		Sounds.itemGet(object);
 	}
 
-
 	@Override
 	public Entity getEntityById(int id) {
 		return entities.get(new Integer(id));
 	}
-
 
 	@Override
 	public void activateRelicSlot(int relicId) {
 		RelicSlot relicSlot = (RelicSlot) getEntityById(relicId);
 		relicSlot.isActivated = true;
 		Sounds.slotActivated(relicSlot);
+		slotsActivated++;
+		Hud.setInfo("Keys activated", String.format("%d/%d", slotsActivated, slotCount));
 	}
 }

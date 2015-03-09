@@ -14,7 +14,7 @@ public class RelicSlot extends Entity implements Serializable {
 
 	@Override
 	public Event[] onTouchPlayer(PlayerCharacter player) {
-		if (player.getInventory().size() > 0) {
+		if (!isActivated && player.getInventory().size() > 0) {
 			player.removeFromInventory(player.getInventory().get(0));
 			Hud.setInfo("Inventory", player.describeInventory());
 			return new Event [] { new ActivateRelicSlotEvent(id) };
