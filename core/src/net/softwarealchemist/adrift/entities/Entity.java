@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.softwarealchemist.adrift.events.Event;
+
 import com.badlogic.gdx.math.Vector3;
 
 public abstract class Entity implements Serializable {
@@ -78,5 +80,9 @@ public abstract class Entity implements Serializable {
 	
 	public List<Item> dropItems() {
 		return new ArrayList<Item>();
+	}
+
+	public Event[] onTouchPlayer(PlayerCharacter player) {
+		return new Event[0];
 	}
 }

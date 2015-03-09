@@ -12,4 +12,5 @@ public interface ClientListener {
 	public Entity getEntityById(int id);
 	
 	public void performPickup(int playerId, int objectId);
+	public void activateRelicSlot(int relicId);
 }

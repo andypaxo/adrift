@@ -8,12 +8,14 @@ import com.badlogic.gdx.audio.Sound;
 
 public class Sounds {
 	private static Sound bling;
+	private static Sound slotActivated;
 	private static Music loop;
 	private static Entity player;
 	private static float loopVolume = 0;
 	
 	public static void startup(Entity playerCharacter) {
 		bling = Gdx.audio.newSound(Gdx.files.internal("sounds/bling.wav"));
+		slotActivated = Gdx.audio.newSound(Gdx.files.internal("sounds/activate-slot.wav"));
 		loop = Gdx.audio.newMusic(Gdx.files.internal("sounds/relic-loop.mp3"));
 		loop.setLooping(true);
 		loop.setVolume(loopVolume);
@@ -22,8 +24,16 @@ public class Sounds {
 	}
 	
 	public static void itemGet(Entity item) {
+		bling.play(getDistanceBasedVolume(item));
+	}
+
+	public static void slotActivated(Entity relicSlot) {
+		slotActivated.play(getDistanceBasedVolume(relicSlot));
+	}
+	
+	private static float getDistanceBasedVolume(Entity item) {
 		float volume = 1f / item.position.dst(player.position);
-		bling.play(volume);
+		return volume;
 	}
 	
 	public static void setLoopDistance(float distance) {
@@ -34,5 +44,7 @@ public class Sounds {
 	
 	public static void shutdown() {
 		bling.dispose();
+		slotActivated.dispose();
+		loop.dispose();
 	}
 }
