@@ -1,4 +1,4 @@
-package net.softwarealchemist.network;
+package net.softwarealchemist.adrift.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -8,17 +8,17 @@ import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import net.softwarealchemist.adrift.Stage;
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.events.Event;
-
-import com.badlogic.gdx.Gdx;
+import net.softwarealchemist.adrift.model.Zone;
+import net.softwarealchemist.adrift.network.ServerConnection;
+import net.softwarealchemist.adrift.network.ServerToClientConnection;
 
 public class AdriftServer {
 
 	private TerrainConfig configuration;
 	private ServerSocket serverSocket;
-	private Stage stage;
+	private Zone stage;
 	private ScheduledThreadPoolExecutor scheduler;
 	private List<ServerConnection> connections;
 
@@ -28,7 +28,7 @@ public class AdriftServer {
 		scheduler = new ScheduledThreadPoolExecutor(4);
 	}
 	
-	public void setStage(Stage stage) {
+	public void setStage(Zone stage) {
 		this.stage = stage;
 	}
 
@@ -47,7 +47,7 @@ public class AdriftServer {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			Gdx.app.exit();
+			System.exit(1);
 		}
 	}
 

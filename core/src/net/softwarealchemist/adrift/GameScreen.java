@@ -8,6 +8,8 @@ import net.softwarealchemist.adrift.entities.Particle;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.adrift.entities.RelicSlot;
+import net.softwarealchemist.adrift.model.Terrain;
+import net.softwarealchemist.adrift.model.Zone;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -54,17 +56,21 @@ public class GameScreen implements Screen {
 	private Environment environment;
 	private PlayerCharacter player;
 	private InputHandler inputHandler;
-	private Stage stage;
 	private Hud hud;
 	private boolean terrainGenerationComplete;
 	private List<Mesh> waterMeshes;
 	private ShaderProgram waterShader;
 	private float[] fogColor;
 
+	private Stage stage;
+	private Zone zone;
+
 	public GameScreen() {
 		createEnvironment();
 		terrain = new Terrain();
 		stage = new Stage(terrain, this);
+		zone = stage.zone;
+		
 		createPlayer();
 		stage.setPlayer(player);
 		
@@ -80,16 +86,9 @@ public class GameScreen implements Screen {
 		
 		time = 0;
 		
-		if (serverIsLocal())
-			stage.startWithLocalServer();
-		else
-			stage.startWithRemoteServer();
+		stage.startAndConnectToServer();
 		
 		System.out.println("Game screen initialized");
-	}
-
-	private boolean serverIsLocal() {
-		return GameState.server == null;
 	}
 	
 	public void startTerrainGeneration() {
@@ -99,11 +98,6 @@ public class GameScreen implements Screen {
 	private void createTerrain() {
 		terrain.generate();
 		terrainGenerationComplete = true;
-		if (serverIsLocal())
-		{
-			stage.pullEntitiesFromTerrain();
-			stage.generateRelics();
-		}
 	}
 	
 	private void createMeshes() {
@@ -144,7 +138,7 @@ public class GameScreen implements Screen {
 		player.position.set(120, 0, 0);
 		player.rotation.set(0, 45, 0);
 		player.size.set(.8f, .99f, .8f);
-		player.id = stage.getNextId();
+		player.id = zone.getNextId();
 		
 		final ModelBuilder modelBuilder = new ModelBuilder();
 		
@@ -195,7 +189,7 @@ public class GameScreen implements Screen {
 
 		inputHandler.handleInput();
 		if (terrainGenerationComplete) {
-			stage.step(delta);
+			zone.step(delta);
 			stage.doEvents();
 		}
 
@@ -217,9 +211,9 @@ public class GameScreen implements Screen {
 			modelBatch.render(terrainModelInstance, environment);
 			// TODO Might be able to do this in a single call
 			// TODO Would be more elegant with multi-iterator
-			for (Entity entity : stage.entities.values())
+			for (Entity entity : zone.entities.values())
 				drawEntity(labels, entity);
-			for (Entity entity : stage.localEntities)
+			for (Entity entity : zone.localEntities)
 				drawEntity(labels, entity);			
 			modelBatch.end();
 			

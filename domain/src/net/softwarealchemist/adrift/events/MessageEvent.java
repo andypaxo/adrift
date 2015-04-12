@@ -3,9 +3,9 @@ package net.softwarealchemist.adrift.events;
 import java.io.Serializable;
 import java.util.List;
 
-import net.softwarealchemist.adrift.Hud;
 import net.softwarealchemist.adrift.entities.Entity;
-import net.softwarealchemist.network.ClientListener;
+import net.softwarealchemist.adrift.model.ClientListener;
+import net.softwarealchemist.adrift.model.Zone;
 
 public class MessageEvent implements Event, Serializable {
 
@@ -23,11 +23,11 @@ public class MessageEvent implements Event, Serializable {
 	public void execute(ClientListener listener) {
 		Entity player = listener.getEntityById(playerId);
 		String playerName = player == listener.getPlayer() ? "Me" : player.getName();
-		Hud.log(playerName + " : " + message);
+		System.out.println(playerName + " : " + message);
 	}
 
 	@Override
-	public List<Event> executeServer(ClientListener listener) {
+	public List<Event> executeServer(Zone listener) {
 		// TODO Auto-generated method stub
 		return null;
 	}

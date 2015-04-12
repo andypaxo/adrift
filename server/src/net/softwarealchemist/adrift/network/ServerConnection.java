@@ -1,4 +1,4 @@
-package net.softwarealchemist.network;
+package net.softwarealchemist.adrift.network;
 
 import java.util.List;
 

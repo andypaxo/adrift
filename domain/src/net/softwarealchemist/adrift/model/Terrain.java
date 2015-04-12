@@ -1,4 +1,4 @@
-package net.softwarealchemist.adrift;
+package net.softwarealchemist.adrift.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +11,7 @@ import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.entities.RelicSlot;
 import net.softwarealchemist.adrift.util.GraphNode;
 import net.softwarealchemist.adrift.util.IntMapReader;
+import net.softwarealchemist.adrift.util.SimplexNoise;
 
 public class Terrain {
 	private int[] voxelData;

@@ -5,7 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import net.softwarealchemist.adrift.entities.Entity;
-import net.softwarealchemist.network.ClientListener;
+import net.softwarealchemist.adrift.model.ClientListener;
+import net.softwarealchemist.adrift.model.Zone;
 
 public class PickupEvent implements Event, Serializable {
 	
@@ -23,7 +24,7 @@ public class PickupEvent implements Event, Serializable {
 	}
 
 	@Override
-	public List<Event> executeServer(ClientListener listener) {
+	public List<Event> executeServer(Zone listener) {
 		Entity collectedEntity = listener.getEntityById(objectId);
 		return Arrays.asList(
 				new MessageEvent(playerId, "Collected " + collectedEntity.getName()),

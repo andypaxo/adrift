@@ -2,7 +2,6 @@ package net.softwarealchemist.adrift.entities;
 
 import java.io.Serializable;
 
-import net.softwarealchemist.adrift.Hud;
 import net.softwarealchemist.adrift.events.ActivateRelicSlotEvent;
 import net.softwarealchemist.adrift.events.Event;
 
@@ -16,7 +15,7 @@ public class RelicSlot extends Entity implements Serializable {
 	public Event[] onTouchPlayer(PlayerCharacter player) {
 		if (!isActivated && player.getInventory().size() > 0) {
 			player.removeFromInventory(player.getInventory().get(0));
-			Hud.setInfo("Inventory", player.describeInventory());
+			System.out.println("Inventory: " + player.describeInventory());
 			return new Event [] { new ActivateRelicSlotEvent(id) };
 		}
 		else {

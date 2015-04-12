@@ -10,167 +10,47 @@ import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.entities.Particle;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
-import net.softwarealchemist.adrift.entities.Relic;
-import net.softwarealchemist.adrift.entities.RelicItem;
 import net.softwarealchemist.adrift.entities.RelicSlot;
 import net.softwarealchemist.adrift.events.Event;
+import net.softwarealchemist.adrift.model.ClientListener;
+import net.softwarealchemist.adrift.model.Terrain;
+import net.softwarealchemist.adrift.model.Zone;
 import net.softwarealchemist.network.AdriftClient;
-import net.softwarealchemist.network.AdriftServer;
-import net.softwarealchemist.network.Broadcaster;
-import net.softwarealchemist.network.ClientListener;
-import net.softwarealchemist.network.ClientToLocalConnection;
 import net.softwarealchemist.network.ClientToSocketConnection;
-import net.softwarealchemist.network.ServerToLocalConnection;
 
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.IntArray;
 
 public class Stage implements ClientListener {
-	Terrain terrain;
-	public HashMap<Integer, Entity> entities;
-	public List<Entity> localEntities;
+
+	public Zone zone;
+	private Terrain terrain;
+	
 	private GameScreen gameScreen;
-	private int highestId;
 	private PlayerCharacter player;
-	
-	private int relicCount;
-	private int slotCount;
-	private int slotsActivated;
-	
+		
 	private AdriftClient client;
-	private AdriftServer server;
-	private Broadcaster broadcaster;
 	private ArrayList<Entity> entitiesToAdd;
 	
 	public Stage(Terrain terrain, GameScreen gameScreen) {
 		this.terrain = terrain;
+		
+		zone = new Zone();
+		zone.terrain = terrain;
+		
 		this.gameScreen = gameScreen;
-		entities = new HashMap<Integer, Entity>();
+		zone.entities = new HashMap<Integer, Entity>();
 		entitiesToAdd = new ArrayList<Entity>();
-		localEntities = new ArrayList<Entity>();
-	}
-
-
-	public void startWithLocalServer() {
-		terrain.configureRandom();
-		server = new AdriftServer();
-		server.setConfiguration(terrain.getConfiguration());
-		server.setStage(this);
-		server.start();
-		
-		final ClientToLocalConnection clientConnection = new ClientToLocalConnection();
-		client = new AdriftClient(clientConnection, this);
-		
-		final ServerToLocalConnection serverConnection = new ServerToLocalConnection(client, this, terrain.getConfiguration(), server);
-		server.addClient(serverConnection);
-		clientConnection.setServerConnection(serverConnection);
-		client.start();
-				
-		broadcaster = new Broadcaster();
-		broadcaster.start();
 	}
 	
-	public void startWithRemoteServer() {
+	public void startAndConnectToServer() {
 		final ClientToSocketConnection clientConnection = new ClientToSocketConnection(GameState.server);
 		client = new AdriftClient(clientConnection, this);
 		client.start();
 	}
 	
-	// Should be part of server?
-	public void generateRelics () {
-		long startTime = System.nanoTime();
-
-		final IntArray validLocations = new IntArray();
-
-		for (int x = 0; x < terrain.configuration.width; x++)
-			for (int z = 0; z < terrain.configuration.depth; z++)
-				for (int y = 2; y < terrain.configuration.height; y++)
-					if ((x+y+z) % 13 == 0 && terrain.get(x, y, z) == 0 && terrain.get(x, y - 1, z) > 0)
-						validLocations.add(y * terrain.configuration.width * terrain.configuration.depth + z * terrain.configuration.width + x);
-		
-		System.out.println(String.format("Found %d valid relic locations", validLocations.size));
-		validLocations.shuffle();
-		for (int relicN = 0; relicN < terrain.configuration.width * .1; relicN++) {
-			RelicItem item = new RelicItem("r" + relicN);
-			final Relic relic = new Relic(item);
-			relic.id = getNextId();
-			int location = validLocations.get(relicN);
-			relic.size.set(.75f, .75f, .75f);
-			relic.position.set(
-				(location % terrain.configuration.width) + .5f,
-				location / (terrain.configuration.width * terrain.configuration.depth) + relic.size.y / 2f,
-				((location / terrain.configuration.width) % terrain.configuration.depth) + .5f
-			);
-			addEntity(relic);
-		}
-
-		System.out.println(String.format("%d relics added in %.1f seconds", relicCount, (System.nanoTime() - startTime) / 1000000000.0));
-	}
-
-
-	public void pullEntitiesFromTerrain() {
-		for (Entity entity : terrain.predefinedEntities) {
-			entity.id = getNextId();
-			addEntity(entity);
-		}
-	}
-	
-	public void addEntity(Entity entity) {
-		if (entity.localOnly)
-			localEntities.add(entity);
-		else
-			entities.put(entity.getKey(), entity);
-		
-		if (entity instanceof Relic)
-			relicCount++;
-		else if (entity instanceof RelicSlot)
-			slotCount++;
-	}
-	
-	public void step(float timeStep) {
-		Vector3 scratch = new Vector3();
-		for (Entity entity : entities.values())
-			stepEntity(timeStep, scratch, entity);
-		for (Entity entity : localEntities)
-			stepEntity(timeStep, scratch, entity);
-	}
-
-
-	private void stepEntity(float timeStep, Vector3 scratch, Entity entity) {
-		entity.velocity.y -= 40 * timeStep * entity.gravityMultiplier;
-		
-		scratch.set(entity.velocity).scl(timeStep);
-		
-		// Very basic (tunneling prone) collision with terrain
-		if (entity.velocity.x != 0) {
-			entity.position.x += scratch.x;
-			if (collisionWithTerrain(entity)) {
-				entity.position.x = resolve(entity.position.x, scratch.x, entity.size.x); // Back out
-				entity.velocity.x = entity.velocity.x * (-entity.bounciness);
-			}
-		}
-		if (entity.velocity.y != 0) {
-			entity.position.y += scratch.y;
-			boolean blockedByGround = GameState.InteractionMode == GameState.MODE_WALK && entity.position.y < entity.size.y * .5f;
-			if (blockedByGround || collisionWithTerrain(entity)) {
-				entity.position.y = resolve(entity.position.y, scratch.y, entity.size.y); // Back out
-				entity.velocity.y = entity.velocity.y * (-entity.bounciness);
-			}
-		}
-		if (entity.velocity.z != 0) {	
-			entity.position.z += scratch.z;
-			if (collisionWithTerrain(entity)) {
-				entity.position.z = resolve(entity.position.z, scratch.z, entity.size.z); // Back out
-				entity.velocity.z = entity.velocity.z * (-entity.bounciness);
-			}
-		}
-
-		entity.step(timeStep);
-	}
-	
 	public void doEvents() {
 		float nearestCollectibleDistance = Float.MAX_VALUE;
-		List<Entity> activeEntities = entities.values().stream().filter((entity) -> entity.isActive()).collect(Collectors.toList());
+		List<Entity> activeEntities = zone.entities.values().stream().filter((entity) -> entity.isActive()).collect(Collectors.toList());
 		for (Entity entity : activeEntities) {
 				
 			
@@ -192,12 +72,12 @@ public class Stage implements ClientListener {
 		Sounds.setLoopDistance(nearestCollectibleDistance);
 		
 		for (Entity entity : entitiesToAdd)
-			addEntity(entity);
+			zone.addEntity(entity);
 		entitiesToAdd.clear();
 
-		Hud.setInfo("Relics remaining", ""+relicCount);
+		Hud.setInfo("Relics remaining", ""+zone.relicCount);
 
-		removeFlaggedEntities(localEntities.iterator());
+		removeFlaggedEntities(zone.localEntities.iterator());
 	}
 
 
@@ -223,44 +103,21 @@ public class Stage implements ClientListener {
 		return result;
 	}
 
-	private float resolve(float position, float velocity, float size) {
-		return velocity > 0
-			? (float) (Math.ceil(position - velocity) - size * .5002f)
-			: (float) (Math.floor(position - velocity) + size * .5002f);
-	}
-
-	private boolean collisionWithTerrain(Entity entity) {
-		Vector3 pos = entity.position, size = new Vector3(entity.size).scl(.5f);
-		return
-			terrain.get((int)(pos.x + size.x), (int)(pos.y + size.y), (int)(pos.z + size.z)) > 0 ||
-			terrain.get((int)(pos.x + size.x), (int)(pos.y + size.y), (int)(pos.z - size.z)) > 0 ||
-			terrain.get((int)(pos.x + size.x), (int)(pos.y - size.y), (int)(pos.z + size.z)) > 0 ||
-			terrain.get((int)(pos.x + size.x), (int)(pos.y - size.y), (int)(pos.z - size.z)) > 0 ||
-			terrain.get((int)(pos.x - size.x), (int)(pos.y + size.y), (int)(pos.z + size.z)) > 0 ||
-			terrain.get((int)(pos.x - size.x), (int)(pos.y + size.y), (int)(pos.z - size.z)) > 0 ||
-			terrain.get((int)(pos.x - size.x), (int)(pos.y - size.y), (int)(pos.z + size.z)) > 0 ||
-			terrain.get((int)(pos.x - size.x), (int)(pos.y - size.y), (int)(pos.z - size.z)) > 0;
-	}
-
 	@Override
 	public void configurationReceived(TerrainConfig configuration) {
 		terrain.configure(configuration);
 		gameScreen.startTerrainGeneration();
 	}
 
-	public int getNextId() {
-		return highestId++;
-	}
-
 	@Override
 	public void setPlayerId(int playerId) {
-		entities.remove(player.getKey());
+		zone.entities.remove(player.getKey());
 		player.id = playerId;
-		addEntity(player);
+		zone.addEntity(player);
 	}
 
 	public void setPlayer(PlayerCharacter player) {
-		addEntity(player);
+		zone.addEntity(player);
 		this.player = player;
 		Sounds.startup(player);
 	}
@@ -269,25 +126,10 @@ public class Stage implements ClientListener {
 	public PlayerCharacter getPlayer() {
 		return player;
 	}
-	
-	public void updateEntity(Entity entity) {
-		if (entities.containsKey(entity.getKey())) {
-			Entity localEntity = getEntityById(entity.getKey());
-			if (localEntity.isActive())
-				localEntity.updateFrom(entity);
-		} else {
-			addEntity(entity);
-			if (entity instanceof PlayerCharacter)
-				Hud.log(entity.getName() + " has joined the party");
-		}
-	}
 
 	public void dispose() {
-		if (server != null)
-			server.dispose();
 		if (client != null)
 			client.dispose();
-		broadcaster.dispose();
 		Sounds.shutdown();
 	}
 
@@ -297,7 +139,7 @@ public class Stage implements ClientListener {
 		if (object == null)
 			return;
 		object.deactivate();
-		relicCount--;
+		zone.relicCount--;
 		for (int i = 0; i < 15; i++)
 			entitiesToAdd.add(makeParticle(object.position));
 		Sounds.itemGet(object);
@@ -305,15 +147,20 @@ public class Stage implements ClientListener {
 
 	@Override
 	public Entity getEntityById(int id) {
-		return entities.get(new Integer(id));
+		return zone.getEntityById(id);
 	}
-
+	
 	@Override
 	public void activateRelicSlot(int relicId) {
 		RelicSlot relicSlot = (RelicSlot) getEntityById(relicId);
 		relicSlot.isActivated = true;
 		Sounds.slotActivated(relicSlot);
-		slotsActivated++;
-		Hud.setInfo("Keys activated", String.format("%d/%d", slotsActivated, slotCount));
+		zone.slotsActivated++;
+		Hud.setInfo("Keys activated", String.format("%d/%d", zone.slotsActivated, zone.slotCount));
+	}
+
+	@Override
+	public void updateEntity(Entity entity) {
+		zone.updateEntity(entity);		
 	}
 }

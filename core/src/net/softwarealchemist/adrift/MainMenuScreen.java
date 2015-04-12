@@ -30,7 +30,6 @@ public class MainMenuScreen implements Screen, DiscoveryListener {
 		spriteBatch = new SpriteBatch();
 		font = new BitmapFont(Gdx.files.internal("fonts/segoeui.fnt"), Gdx.files.internal("fonts/segoeui.png"), false);
 		menuItems = new ArrayList<MainMenuScreen.HostConfig>();
-		menuItems.add(new HostConfig("Host game", null));
 		broadcastListener = new BroadcastListener(this);
 		broadcastListener.start();
 		resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());

@@ -1,4 +1,4 @@
-package net.softwarealchemist.network;
+package net.softwarealchemist.adrift.network;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -7,25 +7,25 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.softwarealchemist.adrift.Hud;
-import net.softwarealchemist.adrift.Stage;
 import net.softwarealchemist.adrift.dto.ClientSetup;
 import net.softwarealchemist.adrift.dto.StateUpdate;
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.events.Event;
+import net.softwarealchemist.adrift.model.Zone;
+import net.softwarealchemist.adrift.server.AdriftServer;
 
 public class ServerToClientConnection implements ServerConnection {
 	private TerrainConfig configuration;
 	private Socket socket;
-	private Stage stage;
+	private Zone stage;
 	private ObjectOutputStream output;
 	private AdriftServer server;
 	private List<Event> eventsToSend;
 	private boolean isDisposed;
 	private ObjectInputStream clientInput;
 
-	public ServerToClientConnection(Socket socket, Stage stage, TerrainConfig configuration, AdriftServer server) throws IOException {
+	public ServerToClientConnection(Socket socket, Zone stage, TerrainConfig configuration, AdriftServer server) throws IOException {
 		this.socket = socket;
 		this.stage = stage;
 		this.configuration = configuration;
@@ -53,7 +53,7 @@ public class ServerToClientConnection implements ServerConnection {
 				}
 			}
 		} catch (Exception e) {
-			Hud.log("Client disconnected");
+			System.out.println("Client disconnected");
 			dispose();
 		}
 	}
@@ -68,7 +68,7 @@ public class ServerToClientConnection implements ServerConnection {
 			output.reset();
 			eventsToSend.clear();
 		} catch (Exception e) {
-			Hud.log("Communication problem. " + e.getClass() + " : " + e.getMessage());
+			System.out.println("Communication problem. " + e.getClass() + " : " + e.getMessage());
 			dispose();
 		}
 	}

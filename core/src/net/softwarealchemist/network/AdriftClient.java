@@ -9,6 +9,7 @@ import net.softwarealchemist.adrift.dto.ClientSetup;
 import net.softwarealchemist.adrift.dto.StateUpdate;
 import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.events.Event;
+import net.softwarealchemist.adrift.model.ClientListener;
 
 public class AdriftClient {
 

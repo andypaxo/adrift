@@ -1,4 +1,4 @@
-package net.softwarealchemist.network;
+package net.softwarealchemist.adrift.model;
 
 import net.softwarealchemist.adrift.dto.TerrainConfig;
 import net.softwarealchemist.adrift.entities.Entity;

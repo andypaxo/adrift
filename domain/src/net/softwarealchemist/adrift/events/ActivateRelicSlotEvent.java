@@ -3,7 +3,8 @@ package net.softwarealchemist.adrift.events;
 import java.io.Serializable;
 import java.util.List;
 
-import net.softwarealchemist.network.ClientListener;
+import net.softwarealchemist.adrift.model.ClientListener;
+import net.softwarealchemist.adrift.model.Zone;
 
 public class ActivateRelicSlotEvent implements Event, Serializable {
 
@@ -21,7 +22,7 @@ public class ActivateRelicSlotEvent implements Event, Serializable {
 	}
 
 	@Override
-	public List<Event> executeServer(ClientListener listener) {
+	public List<Event> executeServer(Zone listener) {
 		return null;
 	}
 

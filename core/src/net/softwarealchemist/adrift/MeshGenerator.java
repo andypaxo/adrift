@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.softwarealchemist.adrift.entities.BlockTypes;
+import net.softwarealchemist.adrift.model.Terrain;
 import net.softwarealchemist.adrift.util.FloatBuffer;
 import net.softwarealchemist.adrift.util.ShortBuffer;
+import net.softwarealchemist.adrift.util.SimplexNoise;
 
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;

@@ -3,10 +3,10 @@ package net.softwarealchemist.adrift.events;
 import java.io.Serializable;
 import java.util.List;
 
-import net.softwarealchemist.adrift.Hud;
 import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
-import net.softwarealchemist.network.ClientListener;
+import net.softwarealchemist.adrift.model.ClientListener;
+import net.softwarealchemist.adrift.model.Zone;
 
 public class ItemGetEvent implements Event, Serializable {
 
@@ -25,12 +25,12 @@ public class ItemGetEvent implements Event, Serializable {
 		if (player.id == playerId) {
 			Entity entity = listener.getEntityById(objectId);
 			player.addToInventory(entity.dropItems());
-			Hud.setInfo("Inventory", player.describeInventory());
+			System.out.println("Inventory : " + player.describeInventory());
 		}
 	}
 
 	@Override
-	public List<Event> executeServer(ClientListener listener) {
+	public List<Event> executeServer(Zone listener) {
 		return null;
 	}
 
