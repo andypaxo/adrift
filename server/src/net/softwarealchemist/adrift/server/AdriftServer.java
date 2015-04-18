@@ -22,6 +22,7 @@ public class AdriftServer {
 	private Zone stage;
 	private ScheduledThreadPoolExecutor scheduler;
 	private List<ServerConnection> connections;
+	long lastTime;
 
 	public void setConfiguration(TerrainConfig configuration) {
 		this.configuration = configuration;
@@ -36,7 +37,9 @@ public class AdriftServer {
 
 	public void start() {
 		new Thread(() -> listen()).start();
-		scheduler.scheduleAtFixedRate(() -> updateWorld(), 50, 100, TimeUnit.MILLISECONDS);
+		scheduler.scheduleAtFixedRate(() -> updateWorld(), 100, 100, TimeUnit.MILLISECONDS);
+		startTime = System.nanoTime();
+		
 	}
 
 	private void listen() {
@@ -94,7 +97,9 @@ public class AdriftServer {
 	}
 	
 	private void updateWorld() {
-		
+		long now = System.nanoTime();
+		stage.step((float) ((now - lastTime) / 10E9));
+		lastTime = now;
 	}
 
 }
