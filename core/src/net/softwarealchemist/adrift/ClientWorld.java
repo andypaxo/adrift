@@ -161,8 +161,8 @@ public class ClientWorld implements ClientListener {
 
 	@Override
 	public void updateEntity(Entity entity) {
-		zone.updateEntity(entity);		
-		if (entity instanceof PlayerCharacter)
+		boolean isNew = zone.updateEntity(entity);		
+		if (isNew && entity instanceof PlayerCharacter)
 			Hud.log(entity.getName() + " has joined the party");
 	}
 }

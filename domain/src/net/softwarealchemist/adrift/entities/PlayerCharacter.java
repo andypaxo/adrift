@@ -24,6 +24,8 @@ public class PlayerCharacter extends Entity {
 
 	public void removeFromInventory(Item item) {
 		inventory.remove(item);
+		System.out.println(String.format("Removed %s from %s", item.getName(), name));
+		System.out.println(String.format("%s inventory : %s", name, describeInventory()));
 	}
 
 	public String describeInventory() {

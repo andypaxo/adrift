@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import net.softwarealchemist.adrift.Hud;
 import net.softwarealchemist.adrift.dto.ClientSetup;
 import net.softwarealchemist.adrift.dto.StateUpdate;
 import net.softwarealchemist.adrift.entities.Entity;
@@ -37,6 +38,7 @@ public class AdriftClient {
 			final ClientSetup clientSetup = (ClientSetup) received;
 			listener.configurationReceived(clientSetup.terrainConfig);
 			listener.setPlayerId(clientSetup.playerId);
+			Hud.log("My id is " + clientSetup.playerId);
 		} else if (received instanceof StateUpdate) {
 			Entity localPlayer = listener.getPlayer();
 			StateUpdate update = (StateUpdate) received;

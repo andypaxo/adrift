@@ -1,12 +1,13 @@
 package net.softwarealchemist.adrift.entities;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
 import net.softwarealchemist.adrift.events.Event;
 import net.softwarealchemist.adrift.events.PickupEvent;
 
-public class Relic extends Entity {
+public class Relic extends Entity implements Serializable {
 	private static final long serialVersionUID = -4110042349438733422L;
 	private RelicItem item;
 

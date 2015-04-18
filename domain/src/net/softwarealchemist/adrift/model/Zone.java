@@ -47,13 +47,15 @@ public class Zone {
 			slotCount++;
 	}
 	
-	public void updateEntity(Entity entity) {
+	public boolean updateEntity(Entity entity) {
 		if (entities.containsKey(entity.getKey())) {
 			Entity localEntity = getEntityById(entity.getKey());
 			if (localEntity.isActive())
 				localEntity.updateFrom(entity);
+			return false;
 		} else {
 			addEntity(entity);
+			return true;
 		}
 	}
 

@@ -38,7 +38,7 @@ public class AdriftServer {
 	public void start() {
 		new Thread(() -> listen()).start();
 		scheduler.scheduleAtFixedRate(() -> updateWorld(), 100, 100, TimeUnit.MILLISECONDS);
-		startTime = System.nanoTime();
+		lastTime = System.nanoTime();
 		
 	}
 
@@ -69,6 +69,10 @@ public class AdriftServer {
 		List<Event> knockOnEvents = processEvents(events);
 		sender.addEvents(knockOnEvents);
 		events.addAll(knockOnEvents);
+		
+		for (Event event : events)
+			event.execute(world);
+		
 		for (ServerConnection connection : connections)
 			if (connection != sender)
 				connection.addEvents(events);

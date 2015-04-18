@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,8 +56,12 @@ public class ServerToClientConnection implements ServerConnection {
 					}
 				}
 			}
-		} catch (Exception e) {
+		} catch (SocketException e) {
 			System.out.println("Client disconnected");
+			dispose();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Client caused error");
 			dispose();
 		}
 	}

@@ -22,7 +22,7 @@ public class ItemGetEvent implements Event, Serializable {
 	@Override
 	public void execute(ClientListener listener) {
 		PlayerCharacter player = listener.getPlayer();
-		if (player.id == playerId) {
+		if (player != null && player.id == playerId) {
 			Entity entity = listener.getEntityById(objectId);
 			player.addToInventory(entity.dropItems());
 			System.out.println("Inventory : " + player.describeInventory());
