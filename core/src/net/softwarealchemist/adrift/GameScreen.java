@@ -62,13 +62,13 @@ public class GameScreen implements Screen {
 	private ShaderProgram waterShader;
 	private float[] fogColor;
 
-	private Stage stage;
+	private ClientWorld stage;
 	private Zone zone;
 
 	public GameScreen() {
 		createEnvironment();
 		terrain = new Terrain();
-		stage = new Stage(terrain, this);
+		stage = new ClientWorld(terrain, this);
 		zone = stage.zone;
 		
 		createPlayer();

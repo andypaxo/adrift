@@ -54,8 +54,6 @@ public class Zone {
 				localEntity.updateFrom(entity);
 		} else {
 			addEntity(entity);
-//			if (entity instanceof PlayerCharacter)
-//				Hud.log(entity.getName() + " has joined the party");
 		}
 	}
 

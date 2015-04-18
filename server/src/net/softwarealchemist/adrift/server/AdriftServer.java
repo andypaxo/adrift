@@ -18,6 +18,7 @@ public class AdriftServer {
 
 	private TerrainConfig configuration;
 	private ServerSocket serverSocket;
+	private ServerWorld world;
 	private Zone stage;
 	private ScheduledThreadPoolExecutor scheduler;
 	private List<ServerConnection> connections;
@@ -30,10 +31,12 @@ public class AdriftServer {
 	
 	public void setStage(Zone stage) {
 		this.stage = stage;
+		world = new ServerWorld(stage);
 	}
 
 	public void start() {
 		new Thread(() -> listen()).start();
+		scheduler.scheduleAtFixedRate(() -> updateWorld(), 50, 100, TimeUnit.MILLISECONDS);
 	}
 
 	private void listen() {
@@ -73,6 +76,7 @@ public class AdriftServer {
 		
 		// This is where arbitration / conflict resolution could occur
 		for (Event event : events) {
+			event.execute(world);
 			List<Event> result = event.executeServer(stage);
 			if (result != null)
 				knockOnEvents.addAll(result);
@@ -87,6 +91,10 @@ public class AdriftServer {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private void updateWorld() {
+		
 	}
 
 }

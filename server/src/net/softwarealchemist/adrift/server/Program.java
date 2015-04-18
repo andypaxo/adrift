@@ -14,6 +14,9 @@ public class Program {
 		Zone zone = new Zone();
 		zone.terrain = new Terrain();
 		zone.terrain.configureRandom();
+		zone.terrain.generate();
+		zone.pullEntitiesFromTerrain();
+		zone.generateRelics();
 		
 		server.setConfiguration(zone.terrain.getConfiguration());
 		server.setStage(zone);

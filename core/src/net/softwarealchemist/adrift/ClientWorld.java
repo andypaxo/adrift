@@ -20,7 +20,7 @@ import net.softwarealchemist.network.ClientToSocketConnection;
 
 import com.badlogic.gdx.math.Vector3;
 
-public class Stage implements ClientListener {
+public class ClientWorld implements ClientListener {
 
 	public Zone zone;
 	private Terrain terrain;
@@ -31,7 +31,7 @@ public class Stage implements ClientListener {
 	private AdriftClient client;
 	private ArrayList<Entity> entitiesToAdd;
 	
-	public Stage(Terrain terrain, GameScreen gameScreen) {
+	public ClientWorld(Terrain terrain, GameScreen gameScreen) {
 		this.terrain = terrain;
 		
 		zone = new Zone();
@@ -162,5 +162,7 @@ public class Stage implements ClientListener {
 	@Override
 	public void updateEntity(Entity entity) {
 		zone.updateEntity(entity);		
+		if (entity instanceof PlayerCharacter)
+			Hud.log(entity.getName() + " has joined the party");
 	}
 }

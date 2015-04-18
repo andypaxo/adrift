@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import net.softwarealchemist.adrift.dto.ClientSetup;
 import net.softwarealchemist.adrift.dto.StateUpdate;
@@ -25,7 +26,9 @@ public class ServerToClientConnection implements ServerConnection {
 	private boolean isDisposed;
 	private ObjectInputStream clientInput;
 
-	public ServerToClientConnection(Socket socket, Zone stage, TerrainConfig configuration, AdriftServer server) throws IOException {
+	public ServerToClientConnection(Socket socket, Zone stage,
+			TerrainConfig configuration, AdriftServer server)
+			throws IOException {
 		this.socket = socket;
 		this.stage = stage;
 		this.configuration = configuration;
@@ -37,9 +40,9 @@ public class ServerToClientConnection implements ServerConnection {
 	public void listen() {
 		try {
 			clientInput = new ObjectInputStream(socket.getInputStream());
-			
+
 			output.writeObject(new ClientSetup(configuration, stage.getNextId()));
-			
+
 			while (!isDisposed) {
 				Object obj = clientInput.readObject();
 				if (obj instanceof StateUpdate) {
@@ -57,13 +60,16 @@ public class ServerToClientConnection implements ServerConnection {
 			dispose();
 		}
 	}
-	
+
 	public void send() {
 		if (isDisposed)
 			return;
 		
 		try {
-			ArrayList<Entity> updatedEntities = new ArrayList<Entity>(stage.entities.values());
+			List<Entity> updatedEntities = 
+					stage.entities.values().stream()
+					.filter(entity -> entity.isActive())
+					.collect(Collectors.toList());
 			output.writeObject(new StateUpdate(updatedEntities, eventsToSend));
 			output.reset();
 			eventsToSend.clear();
@@ -77,7 +83,7 @@ public class ServerToClientConnection implements ServerConnection {
 	public void addEvents(List<Event> events) {
 		eventsToSend.addAll(events);
 	}
-	
+
 	public void dispose() {
 		isDisposed = true;
 		try {
