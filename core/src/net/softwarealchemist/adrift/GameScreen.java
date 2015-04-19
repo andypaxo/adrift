@@ -7,9 +7,11 @@ import net.softwarealchemist.adrift.entities.Entity;
 import net.softwarealchemist.adrift.entities.Particle;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
+import net.softwarealchemist.adrift.entities.RelicItem;
 import net.softwarealchemist.adrift.entities.RelicSlot;
 import net.softwarealchemist.adrift.model.Terrain;
 import net.softwarealchemist.adrift.model.Zone;
+import net.softwarealchemist.adrift.util.RayCaster;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -214,7 +216,11 @@ public class GameScreen implements Screen {
 			for (Entity entity : zone.entities.values())
 				drawEntity(labels, entity);
 			for (Entity entity : zone.localEntities)
-				drawEntity(labels, entity);			
+				drawEntity(labels, entity);
+			
+			// TEMP: Draw what player is looking at
+			drawCursor();
+			
 			modelBatch.end();
 			
 			waterShader.begin();
@@ -238,6 +244,16 @@ public class GameScreen implements Screen {
 		}
 
 		hud.render(labels);
+	}
+
+	private void drawCursor() {
+		Vector3 lookingAt = RayCaster.cast(player.position, player.getFacing(), 512, terrain);
+		if (lookingAt != null) {
+			Relic entity = new Relic(new RelicItem("abc"));
+			entity.position.set(lookingAt);
+			entity.position.add(.5f, 1f, .5f);
+			drawEntity(new ArrayList<Label2d>(), entity);
+		}
 	}
 
 	private void drawEntity(final ArrayList<Label2d> labels, Entity entity) {
@@ -278,7 +294,7 @@ public class GameScreen implements Screen {
 	private void moveCameraToMatchPlayer() {
 		cam.position.set(player.position);
 		cam.position.y += player.size.y * .25f;
-		cam.direction.set(0, 0, 1);
+		cam.direction.set(Vector3.Z);
 		cam.direction.rotate(player.rotation.x, 1, 0, 0);
 		cam.direction.rotate(player.rotation.y, 0, 1, 0);
 	}

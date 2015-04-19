@@ -58,6 +58,12 @@ public abstract class Entity implements Serializable {
 		return (lx <= sumx && ly <= sumy && lz <= sumz);
 	}
 	
+	public Vector3 getFacing() {
+		return new Vector3(Vector3.Z)
+			.rotate(rotation.x, 1, 0, 0)
+			.rotate(rotation.y, 0, 1, 0);
+	}
+	
 	public void step(float delta) {
 		
 	}
