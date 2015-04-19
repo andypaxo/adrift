@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.softwarealchemist.adrift.entities.Entity;
+import net.softwarealchemist.adrift.entities.Monster;
 import net.softwarealchemist.adrift.entities.Particle;
 import net.softwarealchemist.adrift.entities.PlayerCharacter;
 import net.softwarealchemist.adrift.entities.Relic;
-import net.softwarealchemist.adrift.entities.RelicItem;
 import net.softwarealchemist.adrift.entities.RelicSlot;
 import net.softwarealchemist.adrift.model.Terrain;
 import net.softwarealchemist.adrift.model.Zone;
@@ -50,6 +50,9 @@ public class GameScreen implements Screen {
 	
 	private Model activeRelicSlotModel;
 	private ModelInstance activeRelicSlotInstance;
+	
+	private Model monsterModel;
+	private ModelInstance monsterModelInstance;
 	
 	private ModelBatch modelBatch;
 	private PerspectiveCamera cam;
@@ -175,6 +178,11 @@ public class GameScreen implements Screen {
 				new Material(ColorAttribute.createDiffuse(.2f, 1f, .2f, 1)),
 				Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		activeRelicSlotInstance = new ModelInstance(activeRelicSlotModel);
+		
+		monsterModel = modelBuilder.createBox(.75f, .75f, .75f,
+				new Material(ColorAttribute.createDiffuse(Color.RED)),
+				Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+		monsterModelInstance = new ModelInstance(monsterModel);
 	}
 
 	private long lastFpsCountTime;
@@ -249,7 +257,7 @@ public class GameScreen implements Screen {
 	private void drawCursor() {
 		Vector3 lookingAt = RayCaster.cast(player.position, player.getFacing(), 512, terrain);
 		if (lookingAt != null) {
-			Relic entity = new Relic(new RelicItem("abc"));
+			Entity entity = new Particle();
 			entity.position.set(lookingAt);
 			entity.position.add(.5f, 1f, .5f);
 			drawEntity(new ArrayList<Label2d>(), entity);
@@ -269,6 +277,8 @@ public class GameScreen implements Screen {
 				modelToRender = particleModelInstance;
 			else if (entity instanceof RelicSlot)
 				modelToRender = ((RelicSlot)entity).isActivated ? activeRelicSlotInstance : emptyRelicSlotInstance;
+			else if (entity instanceof Monster)
+				modelToRender = monsterModelInstance;
 			
 			modelToRender.transform.setToTranslation(entity.position);
 			modelToRender.transform.rotate(Vector3.Y, entity.rotation.y);
@@ -315,6 +325,7 @@ public class GameScreen implements Screen {
 		particleModel.dispose();
 		emptyRelicSlotModel.dispose();
 		activeRelicSlotModel.dispose();
+		monsterModel.dispose();
 		for (Mesh waterMesh : waterMeshes)
 			waterMesh.dispose();
 		waterShader.dispose();

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import net.softwarealchemist.adrift.entities.Entity;
+import net.softwarealchemist.adrift.entities.Monster;
 import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.adrift.entities.RelicItem;
 import net.softwarealchemist.adrift.entities.RelicSlot;
@@ -155,16 +156,26 @@ public class Zone {
 			RelicItem item = new RelicItem("r" + relicN);
 			final Relic relic = new Relic(item);
 			relic.id = getNextId();
-			int location = validLocations.get(relicN);
-			relic.size.set(.75f, .75f, .75f);
+			int location = validLocations.pop();
 			relic.position.set(
 				(location % terrain.configuration.width) + .5f,
-				location / (terrain.configuration.width * terrain.configuration.depth) + relic.size.y / 2f,
+				location / (terrain.configuration.width * terrain.configuration.depth) + .5f,
 				((location / terrain.configuration.width) % terrain.configuration.depth) + .5f
 			);
 			addEntity(relic);
 		}
 
+		for (int monsterN = 0; monsterN < terrain.configuration.width * .1; monsterN++) {
+			final Monster monster = new Monster();
+			int location = validLocations.pop();
+			monster.position.set(
+					(location % terrain.configuration.width) + .5f,
+					location / (terrain.configuration.width * terrain.configuration.depth) + .375f,
+					((location / terrain.configuration.width) % terrain.configuration.depth) + .5f
+				);
+			monster.id = getNextId();
+			addEntity(monster);
+		}
 		System.out.println(String.format("%d relics added in %.1f seconds", relicCount, (System.nanoTime() - startTime) / 1000000000.0));
 	}
 

@@ -15,6 +15,7 @@ public class Relic extends Entity implements Serializable {
 		super();
 		canBeCollected = true;
 		this.item = item;
+		this.size.set(2, 2, 2);
 	}
 
 	@Override
