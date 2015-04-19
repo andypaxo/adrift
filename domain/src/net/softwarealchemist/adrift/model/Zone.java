@@ -102,8 +102,6 @@ public class Zone {
 				entity.velocity.z = entity.velocity.z * (-entity.bounciness);
 			}
 		}
-
-		entity.step(timeStep);
 	}
 
 	private float resolve(float position, float velocity, float size) {

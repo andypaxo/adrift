@@ -76,6 +76,7 @@ public class ServerToClientConnection implements ServerConnection {
 					.filter(entity -> entity.isActive())
 					.collect(Collectors.toList());
 			output.writeObject(new StateUpdate(updatedEntities, eventsToSend));
+			output.flush();
 			output.reset();
 			eventsToSend.clear();
 		} catch (Exception e) {

@@ -200,7 +200,7 @@ public class GameScreen implements Screen {
 		inputHandler.handleInput();
 		if (terrainGenerationComplete) {
 			zone.step(delta);
-			stage.doEvents();
+			stage.doEvents(delta);
 		}
 
 		if (GameState.InteractionMode == GameState.MODE_FLY || GameState.InteractionMode == GameState.MODE_WALK)

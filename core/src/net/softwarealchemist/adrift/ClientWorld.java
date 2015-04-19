@@ -48,7 +48,10 @@ public class ClientWorld implements ClientListener {
 		client.start();
 	}
 	
-	public void doEvents() {
+	public void doEvents(float delta) {
+		for (Entity entity : zone.localEntities)
+			entity.step(delta);
+		
 		float nearestCollectibleDistance = Float.MAX_VALUE;
 		List<Entity> activeEntities = zone.entities.values().stream().filter((entity) -> entity.isActive()).collect(Collectors.toList());
 		for (Entity entity : activeEntities) {

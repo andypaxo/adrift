@@ -37,7 +37,7 @@ public class AdriftServer {
 
 	public void start() {
 		new Thread(() -> listen()).start();
-		scheduler.scheduleAtFixedRate(() -> updateWorld(), 100, 100, TimeUnit.MILLISECONDS);
+		scheduler.scheduleAtFixedRate(() -> updateWorld(), 50, 50, TimeUnit.MILLISECONDS);
 		lastTime = System.nanoTime();
 		
 	}
@@ -59,7 +59,7 @@ public class AdriftServer {
 
 	public void addClient(ServerConnection connection) {
 		new Thread(() -> connection.listen()).start();
-		scheduler.scheduleAtFixedRate(() -> connection.send(), 500, 500, TimeUnit.MILLISECONDS);
+		scheduler.scheduleAtFixedRate(() -> connection.send(), 100, 100, TimeUnit.MILLISECONDS);
 		connections.add(connection);
 	}
 	
@@ -102,7 +102,7 @@ public class AdriftServer {
 	
 	private void updateWorld() {
 		long now = System.nanoTime();
-		stage.step((float) ((now - lastTime) / 10E9));
+		world.step((float) ((now - lastTime) / 1E9));
 		lastTime = now;
 	}
 

@@ -27,7 +27,7 @@ public abstract class Entity implements Serializable {
 		rotation = new Vector3();
 		position = new Vector3();
 		velocity = new Vector3();
-		size = new Vector3(1, 1, 1);
+		size = new Vector3(.99f, .99f, .99f);
 	}
 
 	public Integer getKey() {

@@ -55,4 +55,10 @@ public class ServerWorld implements ClientListener {
 	public Entity getEntityById(int id) {
 		return zone.getEntityById(id);
 	}
+
+	public void step(float delta) {
+		zone.step(delta);
+		for (Entity entity : zone.entities.values())
+			entity.step(delta);
+	}
 }
