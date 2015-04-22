@@ -91,4 +91,15 @@ public abstract class Entity implements Serializable {
 	public Event[] onTouchPlayer(PlayerCharacter player) {
 		return new Event[0];
 	}
+
+	// TODO : All the functions in this class should work like these,
+	//        rather than returning new values
+	
+	public void getApproximateBoundingMinimum(Vector3 min) {
+		min.set(position).sub(size.x / 2, size.y / 2, size.z / 2);
+	}
+	
+	public void getApproximateBoundingMaximum(Vector3 max) {
+		max.set(position).add(size.x / 2, size.y / 2, size.z / 2);
+	}
 }

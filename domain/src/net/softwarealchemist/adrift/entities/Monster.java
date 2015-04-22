@@ -20,7 +20,7 @@ public class Monster extends Entity {
 			rotation.y = (float) (Math.random() * 360.0);
 		
 		if (Math.random() < .05)
-			velocity.y = 8;
+			velocity.y = 12;
 		
 		float previousYMovement = velocity.y;
 		velocity.set(Vector3.Z); 

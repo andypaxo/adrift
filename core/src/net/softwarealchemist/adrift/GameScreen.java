@@ -11,7 +11,6 @@ import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.adrift.entities.RelicSlot;
 import net.softwarealchemist.adrift.model.Terrain;
 import net.softwarealchemist.adrift.model.Zone;
-import net.softwarealchemist.adrift.util.RayCaster;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -189,6 +188,15 @@ public class GameScreen implements Screen {
 	private int fps;
 	@Override
 	public void render(float delta) {
+		try {
+			step(delta);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Gdx.app.exit();
+		}
+	}
+	
+	private void step(float delta) {
 		if (!terrainGenerationComplete)
 			return;
 		
@@ -255,12 +263,18 @@ public class GameScreen implements Screen {
 	}
 
 	private void drawCursor() {
-		Vector3 lookingAt = RayCaster.cast(player.position, player.getFacing(), 512, terrain);
-		if (lookingAt != null) {
-			Entity entity = new Particle();
-			entity.position.set(lookingAt);
-			entity.position.add(.5f, 1f, .5f);
+//		Vector3 lookingAtVoxel = RayCaster
+//				.cast(player.position, player.getFacing(), 512, terrain)
+//				.add(.5f);
+		Entity lookingAtEntity = zone.findEntityInFrontOf(player);
+		if (lookingAtEntity != null) {
+			Entity entity = new Relic(null);
+			entity.position.set(lookingAtEntity.position);
+			entity.position.add(0, .5f, 0);
 			drawEntity(new ArrayList<Label2d>(), entity);
+			Hud.setInfo("Looking at", String.format("%s %d", lookingAtEntity.getClass().getSimpleName(), lookingAtEntity.id));
+		} else {
+			Hud.setInfo("Looking at", "");
 		}
 	}
 

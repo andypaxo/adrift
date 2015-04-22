@@ -9,8 +9,12 @@ import net.softwarealchemist.adrift.entities.Monster;
 import net.softwarealchemist.adrift.entities.Relic;
 import net.softwarealchemist.adrift.entities.RelicItem;
 import net.softwarealchemist.adrift.entities.RelicSlot;
+import net.softwarealchemist.adrift.util.RayCaster;
 
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.IntArray;
 
 public class Zone {
@@ -182,5 +186,38 @@ public class Zone {
 			entity.id = getNextId();
 			addEntity(entity);
 		}
+	}
+
+	public Entity findEntityInFrontOf(Entity observer) {
+		Ray ray = new Ray(observer.position, observer.getFacing().nor());
+		BoundingBox box = new BoundingBox();
+		Entity closestCandiate = null;
+		float distanceToClosestCandidate;
+
+		Vector3 lookingAtVoxel = RayCaster.cast(observer.position, observer.getFacing(), 512, terrain);
+		
+		distanceToClosestCandidate = lookingAtVoxel != null
+			? observer.position.dst2(lookingAtVoxel.add(.5f))
+			: 512;
+		
+		float distanceToNextCandidate;
+		final Vector3 min = new Vector3();
+		final Vector3 max = new Vector3();
+
+		for (Entity other : entities.values()) {
+			distanceToNextCandidate = other.position.dst2(observer.position);
+			if (other == observer || other.isInactive() || distanceToNextCandidate > distanceToClosestCandidate)
+				continue;
+
+			other.getApproximateBoundingMinimum(min);
+			other.getApproximateBoundingMaximum(max);
+			box.set(min, max);
+			if (Intersector.intersectRayBoundsFast(ray, box)) {
+				distanceToClosestCandidate = distanceToNextCandidate;
+				closestCandiate = other;
+			}
+		}
+		
+		return closestCandiate;
 	}
 }
